@@ -28,24 +28,18 @@ def get_top_term_frequency(df, by, column, lower_lim, upper_lim, ngram_range=(2,
 
 
 
-def get_top_tfidf_words(df, column, tfidf_matrix, tfidf_vocab, num_prop=50, num_words=25, bot=False):
-    if bot:
-        num_prop_ind = np.argsort(df[column])[::-1][-num_prop:]
-    else:
-        num_prop_ind = np.argsort(df[column])[::-1][:num_prop]
+def get_top_tfidf_words(df, column, tfidf_matrix, tfidf_vocab, start_prop=0, end_prop=100, num_words=25, bot=False):
 
-    num_prop_tfidf_sum = np.sum(tfidf_matrix.toarray()[num_prop_ind], axis=0)
-    num_prop_tfidf_cnt = np.count_nonzero(tfidf_matrix.toarray()[num_prop_ind], axis=0)
-    num_prop_tfidf_mean = num_prop_tfidf_sum/num_prop_tfidf_cnt
+    ind = np.argsort(df[column])[::-1][start_prop:end_prop]
+
+    num_prop_tfidf_sum = np.sum(tfidf_matrix.toarray()[ind], axis=0)
+    num_prop_tfidf_cnt = np.count_nonzero(tfidf_matrix.toarray()[ind], axis=0)
+    num_prop_tfidf_mean = np.mean(tfidf_matrix.toarray()[ind], axis=0)
     num_prop_tfidf_mean_sorted_ind = np.argsort(num_prop_tfidf_mean)[::-1][:num_words]
-    if bot:
-        order_type = 'bot'
-    else:
-        order_type = 'top'
 
     num_prop_tfidf_top_vocab = tfidf_vocab[num_prop_tfidf_mean_sorted_ind]
     num_prop_tfidf_top_vocab_score = num_prop_tfidf_mean[num_prop_tfidf_mean_sorted_ind]
-    print "Top {} tfidf words for {} {} properties by {}".format(num_words, order_type,num_prop, column)
+    print "Top {} tfidf words for properties in range {}-{} by {}".format(num_words, start_prop, end_prop, column)
     print "----------------------------------------------------"
     for word, tfidf_mean in zip(num_prop_tfidf_top_vocab,num_prop_tfidf_top_vocab_score):
-        print "{:>20}: {:>.3f}".format(word, tfidf_mean)
+        print "{:>30}: {:>.3f}".format(word, tfidf_mean)

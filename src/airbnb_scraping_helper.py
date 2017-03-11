@@ -1,12 +1,9 @@
-import pandas as pd
-import numpy as np
-import datetime, time
-from collections import defaultdict
-
-from bs4 import BeautifulSoup
-import bs4
-from requests import get
-
+import requests
+import json
+import sys
+import csv
+from math import *
+import pprint
 
 def get_info(soup):
     info_dict=defaultdict()
@@ -22,10 +19,10 @@ def get_info(soup):
     return info_dict
 
 
-def get_urls_from_airbnb(city, state, max_pages=17):
+def get_urls_from_airbnb(city, state):
 # https://www.airbnb.com/s/Seattle--WA?page=2
-
     city0 = city.lower()[0]
+    max_pages = 17
 
     link_list = []
 
@@ -47,9 +44,7 @@ def get_urls_from_airbnb(city, state, max_pages=17):
             outfile.write("https://www.airbnb.com{}\n".format(link))
     return link_list
 
-
 def scrape_data_from_urls(url_list):
-
     datestring = '{:04d}{:02d}{:02d}'.format(datetime.date.today().year, datetime.date.today().month, datetime.date.today().day)
     out_filename = 'data/scraped_listing_info_{}.txt'.format(datestring)
 
@@ -57,29 +52,26 @@ def scrape_data_from_urls(url_list):
     with open(out_filename, mode='a') as outfile:
         page_info=defaultdict(list)
         for i,url in enumerate(url_list):
-            time.sleep(5+np.random.random()*10)  # delays for few seconds
+            time.sleep(5+np.random.random()*10) # delays for few seconds
             response = get(url)
             if response.status_code != 200:
                 descriptions.append((i,"Error"))
             else:
                 soup = BeautifulSoup(response.content, 'html.parser')
                 prop_id = url.split('/')[-1]
-
-                # Get listing description
                 title = soup.title.string.encode('ascii', errors='ignore')
                 outfile.write("prop_id: {}\n".format(prop_id))
-
-                # If listing is still active
                 if (title.split()[0] != 'Airbnb:') & (title.split()[0] !='Vacation'):
-
-                    # Get listing description
                     description = soup.findAll('p')[1].text.encode('ascii', errors='ignore')
                     info = get_info(soup)
+                    #print soup.findAll('span', attrs={'id':'book-it-price-string'})
+                    #print soup.findAll('div', attrs={'class':'book-it__price-amount'})
+                    #price = soup.findAll('div', attrs={'class':'book-it__price-amount'})[0].text.encode('ascii', errors='ignore')
 
                     outfile.write("title: {}\n".format(title))
                     outfile.write("description: {}\n".format(description))
+                    #outfile.write("price: {}\n".format(price))
 
-                    # Get review ratings
                     num_reviews_bs = soup.findAll('h4', attrs={'class':'col-middle va-bottom review-header-text text-center-sm'})
                     if len(num_reviews_bs)>0:
                         num_reviews = num_reviews_bs[0].text
@@ -99,7 +91,7 @@ def scrape_data_from_urls(url_list):
                         #outstring = "{}: {}\n".format(str(key2)[2:-1].strip(), str(value2)[2:-1].strip())
                         outstring = "{}: {}\n".format(str(key2).strip(), str(value2).strip())
                         outfile.write(outstring)
-                else:   # Listing is no longer active
+                else:
                     title='NA'
                     description = 'NA'
                     info = 'NA'
@@ -109,3 +101,69 @@ def scrape_data_from_urls(url_list):
                 print ("Iteration {}: prop_id {}, url {}".format(i, prop_id, url))
                 page_info[prop_id] = [title, description, info]
             response.close()
+
+def getrequest_listing_search(offset, price_min, price_max, lat, lng):
+    url = 'https://api.airbnb.com/v2/search_results'
+
+    #refer to http://airbnbapi.org/#listing-search
+
+
+    payload = {
+        'client_id':'3092nxybyb0otqw18e8nh5nty',
+        'locale':'en-US',
+        'currency':"USD",
+        '_format':"for_search_results",
+        '_limit':50,
+        '_offset':offset,
+        'guests':1,
+        'ib': "false",
+        'ib_add_photo_flow':"true",
+        'min_bathrooms':0,
+        'min_bedrooms':	1,
+        'max_bedrooms':10,
+        'min_beds':	0,
+        'price_min': price_min,
+        'price_max': price_max,
+        'min_num_pic_urls':	1,
+        'sort':	1,
+        'suppress_facets': "true",
+        'user_lat':	lat,
+        'user_lng':	lng,
+        'location': "Seattle, WA"
+
+    }
+
+    r = requests.get(url, params=payload)
+    print(r.url)
+    if r != None:
+        flag = True
+        #print(r.json())
+        return r.json(), flag
+
+    else:
+        flag = False
+    #print(r.text)
+    return None, flag
+
+def getrequest_listing_info(listing_id):
+    url = 'https://api.airbnb.com/v2/listings/{}'.format(listing_id)
+
+    #refer to http://airbnbapi.org/#listing-search
+
+    payload = {
+        'client_id':'3092nxybyb0otqw18e8nh5nty',
+        '_format':'v1_legacy_for_p3',
+        'locale':'en-US'
+    }
+
+    r = requests.get(url, params=payload)
+    print(r.url)
+    if r != None:
+        flag = True
+        #print(r.json())
+        return r.json(), flag
+
+    else:
+        flag = False
+    #print(r.text)
+    return None, flag
