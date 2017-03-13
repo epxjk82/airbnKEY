@@ -1,16 +1,16 @@
 import json
 import sys
-import csv
 from math import *
 import pprint
-import time
-import datetime
+import time, datetime
 import numpy as np
 
-import requests
+import requests, bs4
 from requests import get
 from bs4 import BeautifulSoup
-import bs4
+
+from os import listdir
+from os.path import isfile, join
 
 from collections import defaultdict
 
@@ -37,7 +37,9 @@ def get_current_listings_by_zipcode(zipcode_list, city, state):
                         g.bbox['southwest'][1], g.bbox['northeast'][1])
 
         print "Searching Airbnb for zipcode {}, latlng_bound = {}".format(zipcode,laglng_bound)
-        listing_search_list.append(get_urls_from_airbnb(city, state, zipcode, laglng_bound))
+        urlbase = 'https://www.airbnb.com/'
+
+        listing_search_list.append('{}'.format(get_urls_from_airbnb(city, state, zipcode, laglng_bound)))
         lat_lng_bound_list.append(laglng_bound)
         time.sleep(3+np.random.random()*3)
 
@@ -95,7 +97,7 @@ def get_urls_from_airbnb(city, state, zipcode, latlng_bound=(47.6185289, -122.32
 
     # Append filename with date
     datestring = '{:04d}{:02d}{:02d}'.format(datetime.date.today().year, datetime.date.today().month, datetime.date.today().day)
-    filename_today = 'data/{}_{}_query_{}.txt'.format(city,zipcode, datestring)
+    filename_today = 'data/airbnb_scraping/urls_by_zipcode/{}_{}_query_{}.txt'.format(city,zipcode, datestring)
 
     # Write urls to file
     with open(filename_today, mode='a') as outfile:
@@ -135,8 +137,12 @@ def scrape_data_from_urls(url_list,time_delay=15):
     '''
 
     # Append date string to filename
-    datestring = '{:04d}{:02d}{:02d}'.format(datetime.date.today().year, datetime.date.today().month, datetime.date.today().day)
-    out_filename = 'data/scraped_listing_info_{}.txt'.format(datestring)
+    datestring = '{:04d}{:02d}{:02d}{:02d}{:02d}'.format(datetime.date.today().year,
+                                                         datetime.date.today().month,
+                                                         datetime.date.today().day,
+                                                         datetime.datetime.today().hour,
+                                                         datetime.datetime.today().minute)
+    out_filename = 'data/airbnb_scraping/scraped_listing_info_{}.txt'.format(datestring)
 
     print "Writing data to: {}".format(out_filename)
 
@@ -149,6 +155,7 @@ def scrape_data_from_urls(url_list,time_delay=15):
         # Iterate through url list
         for i,url in enumerate(url_list):
             time.sleep(time_delay+np.random.random()*15) # delays for few seconds
+
             response = get(url)
 
             if response.status_code != 200:
@@ -230,6 +237,25 @@ def scrape_data_from_urls(url_list,time_delay=15):
 
             # Close response
             response.close()
+
+def load_urls_from_file(mypath='../data/airbnb_scraping/urls_by_zipcode/'):
+    '''
+    Description: Retrieve list of urls from file
+
+    INPUT: str (path to folder with url files)
+    OUTPUT: list (urls)
+    '''
+
+    onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+
+    airbnb_url_list=[]
+    for filename in onlyfiles:
+        with open('{}{}'.format(mypath, filename)) as f:
+            for line in f:
+                airbnb_url_list.append(line.strip())
+
+    return airbnb_url_list
+
 
 # =======================================================
 # These functions use the airbnb api
