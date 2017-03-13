@@ -24,6 +24,15 @@ def get_linreg_summary_sm(model):
     ax.set_ylabel('Studentized residuals')
     plt.show()
 
+def get_cv_score(model, X_train, y_train, cv=5, scoring='neg_mean_squared_error'):
+    return np.mean(cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring))
+
+def get_model_pred(model_estimator, X_train, X_test, y_train):
+    model_estimator.fit(X_train, y_train)
+    return model_estimator.predict(X_test), model_estimator
+
+
+
 def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_list, index='Property_ID', loft_sample=False):
 
     print ("Running {} for label {}".format(model_estimator,label))
@@ -45,8 +54,8 @@ def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_lis
     print (X_train.shape, X_test.shape)
     print ("========")
     print ("Running cross validation...")
-    cv_mse = -get_cv_score(GradientBoostingRegressor(), X_train, y_train, cv=5, scoring='neg_mean_squared_error')
-    cv_r2 = get_cv_score(GradientBoostingRegressor(), X_train, y_train, cv=5, scoring='r2')
+    cv_mse = -get_cv_score(model_estimator, X_train, y_train, cv=5, scoring='neg_mean_squared_error')
+    cv_r2 = get_cv_score(model_estimator, X_train, y_train, cv=5, scoring='r2')
     print ("CV MSE: {}, CV R2: {}".format(cv_mse, cv_r2))
     print ("========")
     print ("Training model...")
@@ -111,9 +120,6 @@ def plot_partial_dependency_plots(fitted_model, X_train, n_col=3, n_row=3, xlabe
     plt.show()
     #plt.savefig('plots/patial-dependence-plots.png', bbox_inches='tight')
 
-def get_cv_score(model, X_train, y_train, cv=5, scoring='neg_mean_squared_error'):
-    return np.mean(cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring))
-
 def get_loftium_train_test_split(df):
     insample_prop_ids = []
     with open('data/Loftium/insample_prop_ids.txt') as infile:
@@ -140,8 +146,3 @@ def prep_model_df(df, features, dummys):
     for dummy in dummys:
         model_df = pd.concat([model_df,dummy],axis=1)
     return model_df
-
-def get_model_pred(model_estimator, X_train, X_test, y_train):
-    model = model_estimator()
-    model.fit(X_train, y_train)
-    return model.predict(X_test), model

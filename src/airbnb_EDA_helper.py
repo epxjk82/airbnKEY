@@ -8,7 +8,7 @@ from sklearn.metrics import mean_squared_error, r2_score, roc_curve
 from sklearn.grid_search import GridSearchCV
 import statsmodels.api as sm
 from scipy.stats import f_oneway
-from scipy.misc import imread
+#from scipy.misc import imread
 import matplotlib.pyplot as plt
 import matplotlib.cm as cmx
 import matplotlib.colors as colors
