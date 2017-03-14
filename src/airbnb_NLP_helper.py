@@ -34,7 +34,9 @@ def get_top_tfidf_words(df, column, tfidf_matrix, tfidf_vocab, start_prop=0, end
 
     num_prop_tfidf_sum = np.sum(tfidf_matrix.toarray()[ind], axis=0)
     num_prop_tfidf_cnt = np.count_nonzero(tfidf_matrix.toarray()[ind], axis=0)
-    num_prop_tfidf_mean = np.mean(tfidf_matrix.toarray()[ind], axis=0)
+    num_prop_tfidf_cnt[num_prop_tfidf_cnt==0] = 1.
+    num_prop_tfidf_mean = num_prop_tfidf_sum/num_prop_tfidf_cnt
+    #num_prop_tfidf_mean = np.mean(tfidf_matrix.toarray()[ind], axis=0)
     num_prop_tfidf_mean_sorted_ind = np.argsort(num_prop_tfidf_mean)[::-1][:num_words]
 
     num_prop_tfidf_top_vocab = tfidf_vocab[num_prop_tfidf_mean_sorted_ind]
