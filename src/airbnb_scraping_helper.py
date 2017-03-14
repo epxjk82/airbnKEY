@@ -20,10 +20,15 @@ import geocoder
 # These functions manually scrape through airbnb webpages
 # =======================================================
 def get_current_listings_by_zipcode(zipcode_list, city, state):
-    '''
-    INPUT:  list of zipcodes
+    """Takes list of zipcodes and scrapes airbnb for listings for each zipcode
+
+    INPUT:
+    zipcode_list: list of zipcodes
+    city: city of interest (e.g., 'Seattle')
+    state: state of interest (e.g., 'WA')
+
     OUTPUT: list of airbnb listing urls
-    '''
+    """
 
     listing_search_list=[]
     lat_lng_bound_list=[]
@@ -46,15 +51,18 @@ def get_current_listings_by_zipcode(zipcode_list, city, state):
     return listing_search_list
 
 def get_urls_from_airbnb(city, state, zipcode, latlng_bound=(47.6185289, -122.3219921,47.60317389999999, -122.351255), max_pages=True):
-    # https://www.airbnb.com/s/Seattle--WA?page=2
-    '''
-    Description:
-    Queries airbnb for listings based on city, state, and lat-long bounds
-    and returns a list of urls to each listing
+    """ Queries airbnb for listings based on city, state, zipcode, and lat-long bounds
+        and returns a list of urls for each listing
 
-    INPUT:  str, str, int, tuple, boolean
-    OUTPUT: list
-    '''
+    INPUT:
+    city: city of interest (e.g., 'Seattle')
+    state: state of interest (e.g., 'WA')
+    zipcode: int
+    latlng_bound: tuple
+    max_pages: boolean, set to True to cycle through all pages found from query
+
+    OUTPUT: list of urls
+    """
 
     # Initializing
     city0 = city.lower()[0]
@@ -108,12 +116,12 @@ def get_urls_from_airbnb(city, state, zipcode, latlng_bound=(47.6185289, -122.32
     return link_list
 
 def get_listing_info(soup):
-    '''
-    Description: Parse through soup object and scrape information
+    """ Parse through soup object and scrape information
 
     INPUT: BeautifulSoup object
     OUTPUT: dictionary
-    '''
+    """
+
     info_dict = defaultdict()
 
     for i,div in enumerate(soup.findAll(['div','strong'], attrs={'class': 'col-md-6'})):
@@ -129,12 +137,14 @@ def get_listing_info(soup):
     return info_dict
 
 def scrape_data_from_urls(url_list,time_delay=15):
-    '''
-    Description: Iterate through airbnb url_list and scrape relevant information from page
+    """ Iterate through airbnb url_list and scrape relevant information from page
 
-    INPUT: list (of urls), int (time delay)
-    OUTPUT: None
-    '''
+    INPUT:
+    url_list: list (of urls)
+    time_delay: int (time delay in seconds between queries)
+
+    OUTPUT: Filepath
+    """
 
     # Append date string to filename
     datestring = '{:04d}{:02d}{:02d}{:02d}{:02d}'.format(datetime.date.today().year,
@@ -238,13 +248,16 @@ def scrape_data_from_urls(url_list,time_delay=15):
             # Close response
             response.close()
 
-def load_urls_from_file(mypath='../data/airbnb_scraping/urls_by_zipcode/'):
-    '''
-    Description: Retrieve list of urls from file
+    return out_filename
 
-    INPUT: str (path to folder with url files)
+def load_urls_from_file(mypath='../data/airbnb_scraping/urls_by_zipcode/'):
+    """ Retrieve list of urls from file
+
+    INPUT:
+    mypath: str (path to folder with url files)
+
     OUTPUT: list (urls)
-    '''
+    """
 
     onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 
@@ -257,6 +270,102 @@ def load_urls_from_file(mypath='../data/airbnb_scraping/urls_by_zipcode/'):
     return airbnb_url_list
 
 
+def import_txtfile_as_df(filepath):
+    """Convert data in txt files to pandas dataframe object
+
+    INPUT:
+    filepath: str (path to txt file with data)
+
+    OUTPUT: pandas df
+    """
+
+    datestamp0 = filepath.split('/')[-1].strip()
+    datestamp = ''.join([(char) for char in datestamp0 if char.isdigit()])
+
+    d=defaultdict()
+    d2=defaultdict()
+
+    #Ex.  filepath = 'data/airbnb_scraping/scraped_listing_info_20170313_ALL.txt'
+    with open(filepath) as f:
+        for i,line in enumerate(f):
+
+            # For first line, initialize prop_Id
+            if i==0:
+                cur_prop_id = line.split(':')[1].strip()
+
+            else:
+                if ':' in line:
+                    key = line.split(':')[0].strip()
+                    val = line.split(':')[1].strip()
+                    if key=='prop_id':
+                        d[cur_prop_id] = d2
+                        cur_prop_id = val
+                        d2=defaultdict()
+                    else:
+                        #print key, val
+                        d2[key] = val
+                # If line does not contain ":", then there is an unwanted line break
+                # Append this new line to previous key's value
+                else:
+                    print "Line break error on line ", i
+                    d2[key] = d2[key] + ' ' + line
+
+    df = pd.DataFrame.from_dict(d, orient='index', dtype=None)
+    df=df.reset_index()
+    df['url'] = df['index'].apply(lambda x: 'https://www.airbnb.com/rooms/{}'.format(x))
+    df['datestamp'] = datestamp
+    df.rename(columns={"index": "prop_id"}, inplace=True)
+    return df
+
+def export_df_to_csv(df, json=False):
+    """ Export pandas df to csv and json (optional)
+
+    INPUT:
+    df: pandas df
+    json: boolean, write to json file if True
+
+    OUTPUT: None
+    """
+
+    # Append datestring to identify when data was extracted
+    datestring = '{:04d}{:02d}{:02d}'.format(datetime.date.today().year,
+                                         datetime.date.today().month,
+                                         datetime.date.today().day,
+                                         datetime.datetime.today().hour,
+                                         datetime.datetime.today().second)
+    # Save to csv
+    filename_csv = 'data/airbnb_scraping/scraped_listing_info_{}.csv'.format(datestring)
+    print ("Saving csv file to: ", filename_csv)
+    df.to_csv(filename)
+
+
+    if json:
+        # If argument json=True, Save to json
+        filename_json = 'data/airbnb_scraping/scraped_listing_info_{}.csv'.format(datestring)
+        print ("Saving json file to: ", filename_json)
+        with open('data/airbnb_scraping/scraped_listing_info_{}.json'.format(datestring), 'w') as outfile:
+            json.dump(out_json, outfile)
+
+def add_csv_to_mongodb(csv_file, collection_name):
+    """ Inserts csv data into a mongodb
+
+    INPUT:
+    csv_file: path to csv file (str)
+    collection_name: name of collection in mongodb (str)
+
+    OUTPUT: None
+    """
+
+    mng_client=pymongo.MongoClient('localhost', 27017)
+    mng_db = mng_client['airbnKEY']
+    db_cm = mng_db[collection_name]
+
+    print ("Reading csv file from ", csv_file)
+    data = pd.read_csv(csv_file)
+    data_json = json.loads(data.to_json(orient='records'))
+
+    print ("Inserting data into mongodb airbnKEY, collection = ", collection_name)
+    db_cm.insert(data_json)
 # =======================================================
 # These functions use the airbnb api
 # =======================================================
