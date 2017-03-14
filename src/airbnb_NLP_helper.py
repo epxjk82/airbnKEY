@@ -10,18 +10,17 @@ airbnb_stopwords = [
 'room','bedroom','bed',
 ]
 
-def get_top_term_frequency(df, by, column, lower_lim, upper_lim, ngram_range=(2,2), num_words=25, stop_words=airbnb_stopwords):
-    segment_df = df[(df[column]>=lower_lim) & (df[column]<upper_lim)]
+def get_top_term_frequency(tf, df, column, by, lower_lim, upper_lim, num_words=25):
+    segment_df = df[(df[by]>=lower_lim) & (df[by]<upper_lim)]
     prop_cnt = segment_df.shape[0]
     print "Number of properties: {}".format(prop_cnt)
 
-    tf = CountVectorizer(stop_words=stop_words, ngram_range=ngram_range, max_features=5000)
-    tf_matrix = tf.fit_transform(segment_df[by])
+    tf_matrix = tf.fit_transform(segment_df[column])
     tf_vocab= np.array(tf.get_feature_names())
     tf_matrix_sum = np.sum(tf_matrix.toarray(),axis=0)
     sorted_ind = np.argsort(tf_matrix_sum)[::-1]
 
-    print "Top term frequency based on {}, {} > {} > {}".format(by,lower_lim,column, upper_lim)
+    print "Top term frequency based on {}, {} > {} > {}".format(by,lower_lim, by, upper_lim)
     print "---------------------------------------------"
     for word, count in zip(tf_vocab[sorted_ind[:num_words]], tf_matrix_sum[sorted_ind[:num_words]]):
         print "{:>30}, {:>4d}, {:.2f}%".format(word, count, (count*1.0/prop_cnt)*100)
