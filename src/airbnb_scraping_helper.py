@@ -4,7 +4,8 @@ from math import *
 import pprint
 import time, datetime
 import numpy as np
-
+import pandas as pd
+import pymongo
 import requests, bs4
 from requests import get
 from bs4 import BeautifulSoup
@@ -317,7 +318,7 @@ def import_txtfile_as_df(filepath):
     df.rename(columns={"index": "prop_id"}, inplace=True)
     return df
 
-def export_df_to_csv(df, json=False):
+def export_df_to_csv(df, filepath, json=False):
     """ Export pandas df to csv and json (optional)
 
     INPUT:
@@ -326,18 +327,9 @@ def export_df_to_csv(df, json=False):
 
     OUTPUT: None
     """
-
-    # Append datestring to identify when data was extracted
-    datestring = '{:04d}{:02d}{:02d}'.format(datetime.date.today().year,
-                                         datetime.date.today().month,
-                                         datetime.date.today().day,
-                                         datetime.datetime.today().hour,
-                                         datetime.datetime.today().second)
     # Save to csv
-    filename_csv = 'data/airbnb_scraping/scraped_listing_info_{}.csv'.format(datestring)
-    print ("Saving csv file to: ", filename_csv)
-    df.to_csv(filename)
-
+    print ("Saving csv file to: ", filepath)
+    df.to_csv(filepath)
 
     if json:
         # If argument json=True, Save to json
@@ -364,17 +356,28 @@ def add_csv_to_mongodb(csv_file, collection_name):
     data = pd.read_csv(csv_file)
     data_json = json.loads(data.to_json(orient='records'))
 
-    print ("Inserting data into mongodb airbnKEY, collection = ", collection_name)
+    print ("Inserting data into mongodb airbnKEY, collection = {}".fomrat(collection_name))
     db_cm.insert(data_json)
+    
 # =======================================================
 # These functions use the airbnb api
 # =======================================================
-def getrequest_listing_search_api(offset, price_min, price_max, lat, lng):
+def getrequest_listing_search_apita (offset, price_min, price_max, lat, lng):
+    """ Uses airbnb api to query data
+
+    INPUT:
+    price_min: minimum price threshold for query
+    price_max: maximum price threshold for query
+    lat: latitudue coordinate for search area
+    lng: longitude coordinate for search area
+
+    OUTPUT:
+    None
+    """
     url = 'https://api.airbnb.com/v2/search_results'
 
+    # Define payload for API query
     #refer to http://airbnbapi.org/#listing-search
-
-
     payload = {
         'client_id':'3092nxybyb0otqw18e8nh5nty',
         'locale':'en-US',
