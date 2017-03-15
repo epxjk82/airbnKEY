@@ -15,13 +15,14 @@ def index():
     lat-long coordinates"""
     return render_template('main/index.html')
 
-@app.route('/predict', methods=['GET'])
+@app.route('/predict', methods=['POST'])
 def predict():
     """Recieve the lat-long inputs use the model to predict airbnb income
     """
     user_data = request.json
-    lag,lng = user_data['lat'], user_data['lng']
-    pred = model.predict(np.array(lat,lng))
+    lat,lng = user_data['lat'], user_data['lng']
+    latlng_data = np.array((lat, lng)).reshape(1,-1)
+    pred = model.predict(latlng_data)
     return jsonify({'prediction': pred})
 
 if __name__ == '__main__':
