@@ -356,9 +356,9 @@ def add_csv_to_mongodb(csv_file, collection_name):
     data = pd.read_csv(csv_file)
     data_json = json.loads(data.to_json(orient='records'))
 
-    print ("Inserting data into mongodb airbnKEY, collection = {}".fomrat(collection_name))
+    print ("Inserting data into mongodb airbnKEY, collection = {}".format(collection_name))
     db_cm.insert(data_json)
-    
+
 # =======================================================
 # These functions use the airbnb api
 # =======================================================
