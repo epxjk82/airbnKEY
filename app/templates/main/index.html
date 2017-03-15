@@ -1,0 +1,113 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+<style>
+  * {
+    padding: 0px;
+    margin: 0;
+    font-family: Century Gothic;
+  }
+  .fit { /* set relative picture size */
+    max-width: 80%;
+    max-height: 100%;
+  }
+  .fitfull { /* set relative picture size */
+    max-width: 100%;
+    max-height: 100%;
+  }
+  .center {
+    display: block;
+    margin: auto;
+  }
+</style>
+  <meta charset="utf-8">
+
+  <title>Home Affordability with Airbnb</title>
+
+  <meta name="description" content="The Galvanize DSI Text Classifier">
+  <meta name="author" content="DSI Instructor">
+
+  <script type="text/javascript"
+          src="{{ url_for('static', filename='jquery.js') }}">
+  </script>
+
+</head>
+<body>
+  <img class="center fit"  src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/main_banner_v01.gif'>
+
+
+  <table class="center fit" cellpadding=0>
+    <tr>
+      <td valign=top width=250>
+      <img class="fitfull" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/left_rooms.png'>
+      </td>
+      <td valign=top width=20>
+      </td>
+      <td valign=top align=left>
+        <br>
+        <h1>Home Affordability with Airbnb</h1>
+        <br>
+        <p>Home affordability continues to be a major challenge in many metropolitan areas.
+          With housing prices outpacing wages and escalating student debt levels,
+          it has become increasingly difficult for prospective home buyers to fulfill
+          the American dream.</p><br>
+
+        <p>Fortunately, homeowners now have the option to Airbnb spare rooms in their new
+          homes to help pay for the mortgage. </p><br>
+
+        <p>Using machine learning models, this projects aims to provide a glimpse into
+           the potential upside from using Airbnb's services. </p>
+
+      </td>
+      <td valign=top width=50>
+      </td>
+      <td valign=top align=left width=400>
+        <br>
+        <h1>Prediction</h1>
+        <br>
+        <img class="fit center" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/ex_55.png'>
+
+        <span id="prediction" style="font-size:50"></span>
+
+        <br><br>
+        <table width=300>
+          <tr>
+            <td>Latitude</td>
+            <td>
+              <div class="form-group">
+                <input class="form-control" id="lat"></input>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Longitude
+            </td>
+            <td>
+              <div class="form-group">
+                <input class="form-control" id="lng"></input>
+              </div>
+          </td>
+          </tr>
+          <tr>
+            <td>
+            </td>
+            <td>
+              <div class="form-group">
+                <button type="button" id="predict" class="btn-primary">Predict!</button>
+              </div>
+            </td>
+          </tr>
+       </table>
+
+
+
+      </td>
+      <td width=15></td>
+    </tr>
+  </table>
+
+
+</body>
+</html>
