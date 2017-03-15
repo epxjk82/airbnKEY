@@ -34,6 +34,7 @@ def get_current_listings_by_zipcode(zipcode_list, city, state):
     listing_search_list=[]
     lat_lng_bound_list=[]
 
+    city_ = city.replace(' ', '-')
     for zipcode in zipcode_list:
         g = geocoder.google(zipcode)
 
@@ -45,9 +46,9 @@ def get_current_listings_by_zipcode(zipcode_list, city, state):
         print "Searching Airbnb for zipcode {}, latlng_bound = {}".format(zipcode,laglng_bound)
         urlbase = 'https://www.airbnb.com/'
 
-        listing_search_list.append('{}'.format(get_urls_from_airbnb(city, state, zipcode, laglng_bound)))
+        listing_search_list.append('{}'.format(get_urls_from_airbnb(city_, state, zipcode, laglng_bound)))
         lat_lng_bound_list.append(laglng_bound)
-        time.sleep(3+np.random.random()*3)
+        time.sleep(5+np.random.random()*5)
 
     return listing_search_list
 
@@ -79,6 +80,7 @@ def get_urls_from_airbnb(city, state, zipcode, latlng_bound=(47.6185289, -122.32
     response.close()
 
     # Count number of results pages
+    next_links = soup.findAll('a', attrs={'rel':'next'})
     next_link_cnt = len(soup.findAll('a', attrs={'rel':'next'}))
 
     # Get all url links on first page
@@ -90,7 +92,9 @@ def get_urls_from_airbnb(city, state, zipcode, latlng_bound=(47.6185289, -122.32
 
     # If more than one page of results, cycle through each page
     if (max_pages) & (next_link_cnt > 1):
-        for page_no in range(1,next_link_cnt):
+        num_next_pages = max([int(link.text) for link in next_links if link.text.isdigit()])
+
+        for page_no in range(1,num_next_pages):
             time.sleep(5+np.random.random()*10) # delays for few seconds
             url = 'https://www.airbnb.com/{}/{}--{}?page={}&room_types%5B%5D=Private%20room&allow_override%5B%5D=&ne_lat={}&ne_lng={}&sw_lat={}&sw_lng={}&search_by_map=true'.format(city0,city,state,page_no,ne_lat,ne_lng,sw_lat,sw_lng)
             print url
@@ -188,7 +192,11 @@ def scrape_data_from_urls(url_list,time_delay=15):
                 if (title.split()[0] != 'Airbnb:') & (title.split()[0] !='Vacation'):
 
                     # Get listing description
-                    description = soup.findAll('p')[1].text.encode('utf-8', errors='ignore')
+                    p_list = soup.findAll('p')[1].text.encode('utf-8', errors='ignore')
+                    if len(p_list) > 1:
+                        description = soup.findAll('p')[1].text.encode('utf-8', errors='ignore')
+                    else:
+                        description = 'NA'
 
                     # Get listing information
                     info = get_listing_info(soup)
@@ -198,9 +206,14 @@ def scrape_data_from_urls(url_list,time_delay=15):
                     d_meta = json.loads(str(metadata[0].get('content').encode('utf-8', errors='ignore')))
                     d_meta = d_meta['airEventData']
 
+                    metadata2 = soup.findAll('meta', attrs={'id':'_bootstrap-neighborhood_card'})
+                    neighborhood = json.loads(str(metadata2[0].get('content').encode('utf-8', errors='ignore')))
+                    neighborhood = neighborhood['neighborhood_localized_name']
+
                     # Write data to file
                     outfile.write("title: {}\n".format(title))
                     outfile.write("description: {}\n".format(description))
+                    outfile.write("neighborhood: {}\n".format(neighborhood))
 
                     # Get number of reviews
                     num_reviews_bs = soup.findAll('h4', attrs={'class':'col-middle va-bottom review-header-text text-center-sm'})
