@@ -5,6 +5,7 @@ from sklearn.metrics import mean_squared_error, r2_score, roc_curve
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
 from sklearn.ensemble.partial_dependence import plot_partial_dependence, partial_dependence
+from sklearn.base import clone
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
@@ -31,9 +32,21 @@ def get_model_pred(model_estimator, X_train, X_test, y_train):
     model_estimator.fit(X_train, y_train)
     return model_estimator.predict(X_test), model_estimator
 
+def get_model_confidence_interval(fitted_model, X_train, y_train, X_test, conf_interval=0.95):
 
+    alpha = (1-conf_interval)/2
 
-def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_list, index='Property_ID', loft_sample=False):
+    model_CI_upper = clone(fitted_model)
+    model_CI_upper.set_params(alpha=1-alpha, loss='quantile')
+    model_CI_upper.fit(X_train,y_train)
+
+    model_CI_lower = clone(fitted_model)
+    model_CI_lower.set_params(alpha=alpha, loss='quantile')
+    model_CI_lower.fit(X_train,y_train)
+
+    return model_CI_upper, model_CI_lower
+
+def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_list, index='Property_ID', conf_interval=0.90, loft_sample=False):
 
     print ("Running {} for label {}".format(model_estimator,label))
     dummy_df_list = get_dummy_dfs(df, dummy_list)
@@ -41,6 +54,7 @@ def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_lis
     X = X.drop(label, axis=1)
     y = df[label]
 
+    # Perform train test split
     if loft_sample:
         train_ind, test_ind = get_loftium_train_test_split(df)
         X_train = X[train_ind]
@@ -51,6 +65,7 @@ def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_lis
         X_train, X_test, y_train, y_test = train_test_split(X,y)
 
     print ("Splitting into {} training instances".format(len(X_train)))
+
     print (X_train.shape, X_test.shape)
     print ("========")
     print ("Running cross validation...")
@@ -60,14 +75,21 @@ def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_lis
     print ("========")
     print ("Training model...")
     y_pred, fitted_model = get_model_pred(model_estimator, X_train, X_test,y_train)
+
+    # Get confidence intervals for predictions
+    fitted_model_CI_upper, fitted_model_CI_lower = get_model_confidence_interval(fitted_model, X_train, y_train, X_test, conf_interval)
+
+    # Get error scores
     mse, r2 = mean_squared_error(y_test, y_pred), r2_score(y_test, y_pred)
     print ("Test MSE: {}, Test R2: {}".format(mse, r2))
     print ("Returned pred df with shape {}".format(y_pred.shape))
 
-    Xout = df.copy()
-    Xout['pred'] = fitted_model.predict(X)
+    full_pred_df = df.copy()
+    full_pred_df['pred'] = fitted_model.predict(X)
+    full_pred_df['pred_upper'] = fitted_model_CI_upper.predict(X)
+    full_pred_df['pred_lower'] = fitted_model_CI_lower.predict(X)
 
-    return Xout, X_train, fitted_model
+    return fitted_model, full_pred_df, y_pred, X_train, X_test, y_train, y_test
 
 def plot_feature_importances(fitted_model, X_train):
     features_names = X_train.columns
