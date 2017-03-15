@@ -192,7 +192,7 @@ def scrape_data_from_urls(url_list,time_delay=15):
                 if (title.split()[0] != 'Airbnb:') & (title.split()[0] !='Vacation'):
 
                     # Get listing description
-                    p_list = soup.findAll('p')[1].text.encode('utf-8', errors='ignore')
+                    p_list = soup.findAll('p')
                     if len(p_list) > 1:
                         description = soup.findAll('p')[1].text.encode('utf-8', errors='ignore')
                     else:
