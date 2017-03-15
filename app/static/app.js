@@ -8,7 +8,7 @@ let get_input_latlng = function() {
 
 let send_latlng_json = function(latlng) {
     $.ajax({
-        url: '',
+        url: '/predict',
         contentType: "application/json; charset=utf-8",
         type: 'POST',
         data: JSON.stringify(latlng),
@@ -19,7 +19,7 @@ let send_latlng_json = function(latlng) {
 };
 
 let display_prediction = function(prediction) {
-    $("span#prediction").html(prediction.pred)
+    $("span#predict").html(prediction.prediction)
 };
 
 

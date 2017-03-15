@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import pickle
-from build_model import TextClassifier
+import numpy as np
 
 app = Flask(__name__)
 
@@ -22,7 +22,8 @@ def predict():
     user_data = request.json
     lat,lng = user_data['lat'], user_data['lng']
     latlng_data = np.array((lat, lng)).reshape(1,-1)
-    pred = model.predict(latlng_data)
+    pred = int(model.predict(latlng_data)[0])
+    #pred_dollar = "${}".format(pred)
     return jsonify({'prediction': pred})
 
 if __name__ == '__main__':
