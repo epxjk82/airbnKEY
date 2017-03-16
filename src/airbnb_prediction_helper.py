@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, KFold
 from sklearn.metrics import mean_squared_error, r2_score, roc_curve
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
@@ -32,8 +32,25 @@ def get_model_pred(model_estimator, X_train, X_test, y_train):
     model_estimator.fit(X_train, y_train)
     return model_estimator.predict(X_test), model_estimator
 
-def get_model_confidence_interval(fitted_model, X_train, y_train, X_test, conf_interval=0.95):
+def get_model_confidence_interval(fitted_model, X_train, y_train, conf_interval=0.95):
+    """Fits GradientBoostingRegressor models for upper and lower bounds of confidence interval
 
+    Parameters
+    ----------
+    fitted_model : GradientBoostingRegressor model class
+        A GradientBoostingRegressor model that has already been fitted on training data
+    X_train : array-like
+        The training data that was used to fit fitted_model
+    y_train : array-like
+        The labeled data that was used to fit fitted_model
+    conf_interval : float
+        The confidence interval used to specify alpha in upper and lower bounds
+
+    Returns
+    -------
+    GradientBoostingRegressor model class (upper bound)
+    GradientBoostingRegressor model class (lower bound)
+    """
     alpha = (1-conf_interval)/2
 
     model_CI_upper = clone(fitted_model)
@@ -141,6 +158,74 @@ def plot_partial_dependency_plots(fitted_model, X_train, n_col=3, n_row=3, xlabe
 
     plt.show()
     #plt.savefig('plots/patial-dependence-plots.png', bbox_inches='tight')
+
+def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=10,N_ESTIMATORS = 2500):
+    """A cross validation plotter that shows mse vs number of boosted stages
+
+    Parameters
+    ----------
+    model : GradientBoostingRegressor model class
+    X : array-like
+        The training data to be used in fitting the model
+    y : int, float, string or None, optional (default="auto")
+        The labeled data
+    N_FOLDS : integer or None, optional (default=10)
+        The number of cross validation folds
+    N_ESTIMATORS : integer or None, optional (default=4000)
+        The number of decicion trees for boosting
+
+    Returns
+    -------
+    None
+    """
+
+    train_scores = np.zeros((N_FOLDS, N_ESTIMATORS))
+    test_scores = np.zeros((N_FOLDS, N_ESTIMATORS))
+
+    kf = KFold(n_splits=N_FOLDS, shuffle=True, random_state=1)
+
+    for k, (train_idxs, test_idxs) in enumerate(kf.split(X)):
+        #print train_idxs
+        X_train, y_train = X.iloc[train_idxs], y.iloc[train_idxs]
+        X_test, y_test = X.iloc[test_idxs], y.iloc[test_idxs]
+        model_cv = clone(model)
+        #GradientBoostingRegressor(n_estimators=N_ESTIMATORS, learning_rate=0.01)
+        model_cv.set_params(n_estimators=N_ESTIMATORS)
+        model_cv.fit(X_train, y_train)
+        for i, y_pred in enumerate(model_cv.staged_predict(X_train)):
+            train_scores[k, i] = model_cv.loss_(y_train, y_pred)
+        for i, y_pred in enumerate(model_cv.staged_predict(X_test)):
+            test_scores[k, i] = model_cv.loss_(y_test, y_pred)
+
+    mean_train_score = np.mean(train_scores, axis=0)
+    mean_test_score = np.mean(test_scores, axis=0)
+
+    optimal_n_trees = np.argmin(mean_test_score)
+    optimal_score = mean_test_score[optimal_n_trees]
+    optimal_point = (optimal_n_trees, optimal_score)
+
+    for i in xrange(N_FOLDS):
+        plt.plot(np.arange(N_ESTIMATORS) + 1, train_scores[i, :], color='red', alpha=0.25)
+
+    for i in xrange(N_FOLDS):
+        plt.plot(np.arange(N_ESTIMATORS) + 1, test_scores[i, :], color='blue', alpha=0.25)
+
+    plt.plot(np.arange(N_ESTIMATORS) + 1, mean_test_score, color='blue', linewidth=2,
+             label='Average Validation Fold Error')
+    plt.plot(np.arange(N_ESTIMATORS) + 1, mean_train_score, color='red', linewidth=2,
+             label='Average Training Fold Error')
+
+    plt.annotate('Optimal Cross Validation Error', optimal_point,
+                  xytext=(optimal_point[0] - 1000, optimal_point[1] + 100),
+                  arrowprops=dict(facecolor="darkgrey", shrink=0.05),
+                  fontsize=14,
+                  alpha=0.75
+                )
+    plt.title("Cross Validation Training and Testing Scores ({}) folds)".format(N_FOLDS))
+    plt.xlabel('Number of Boosting Stages', fontsize=14)
+    plt.ylabel('Average Squared Error', fontsize=14)
+    plt.legend(loc="upper right")
+
 
 def get_loftium_train_test_split(df):
     insample_prop_ids = []
