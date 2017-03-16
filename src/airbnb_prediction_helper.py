@@ -64,6 +64,37 @@ def get_model_confidence_interval(fitted_model, X_train, y_train, conf_interval=
     return model_CI_upper, model_CI_lower
 
 def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_list, index='Property_ID', conf_interval=0.90, loft_sample=False):
+    """Fits GradientBoostingRegressor models for specified features and returns predictions
+
+    Parameters
+    ----------
+    model_estimator: sklearn-type class
+        A model (class) that has been initialized with set parameters
+    df : pandas DataFrame
+        Full data set
+    label : str
+        Name of the label column in the dataset that
+    feature_list : list of str
+        List of column names of the subset of features to be included in fitting the model
+    dummy_list : list of str
+        List of column names of the subset of features to be dummy-coded in fitting the model
+    index: str, optional, default='Property_ID'
+        Name of column to be used for pandas df joining process
+    conf_interval: float, optional, default=0.90
+        Confidence interval for predictions
+    loft_sample: boolean, optional, default=False
+        Set to true to use exact train-test split from loftium model
+
+    Returns
+    -------
+    fitted_model : model class, fitted model on feature_list and dummy_list
+    full_pred_df : pandas DataFrame, original df with predictions
+    y_pred : array, predicted values
+    X_train : pandas DataFrame, training data for inputs
+    X_test : pandas DataFrame, testing data for inputs
+    y_train : pandas DataFrame, training data for labels
+    y_test : pandas DataFrame, test data for labels
+    """
 
     print ("Running {} for label {}".format(model_estimator,label))
     dummy_df_list = get_dummy_dfs(df, dummy_list)
