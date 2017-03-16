@@ -203,12 +203,21 @@ def scrape_data_from_urls(url_list,time_delay=15):
 
                     # Get metadata
                     metadata = soup.findAll('meta', attrs={'id':'_bootstrap-room_options'})
-                    d_meta = json.loads(str(metadata[0].get('content').encode('utf-8', errors='ignore')))
-                    d_meta = d_meta['airEventData']
+                    if len(metadata) > 0:
+                        d_meta = json.loads(str(metadata[0].get('content').encode('utf-8', errors='ignore')))
+                        d_meta = d_meta['airEventData']
+                        for key3, value3 in d_meta.items():
+
+                            # Write meta data to file
+                            outstring = "{}: {}\n".format(str(key3).strip(), str(value3).strip())
+                            outfile.write(outstring)
 
                     metadata2 = soup.findAll('meta', attrs={'id':'_bootstrap-neighborhood_card'})
-                    neighborhood = json.loads(str(metadata2[0].get('content').encode('utf-8', errors='ignore')))
-                    neighborhood = neighborhood['neighborhood_localized_name']
+                    if len(metadata2) > 0:
+                        neighborhood = json.loads(str(metadata2[0].get('content').encode('utf-8', errors='ignore')))
+                        neighborhood = neighborhood['neighborhood_localized_name']
+                    else:
+                        neighborhood = 'NA'
 
                     # Write data to file
                     outfile.write("title: {}\n".format(title))
@@ -241,11 +250,7 @@ def scrape_data_from_urls(url_list,time_delay=15):
                         outstring = "{}: {}\n".format(str(key2).strip(), str(value2).strip())
                         outfile.write(outstring)
 
-                    for key3, value3 in d_meta.items():
 
-                        # Write meta data to file
-                        outstring = "{}: {}\n".format(str(key3).strip(), str(value3).strip())
-                        outfile.write(outstring)
 
                 # Listing is not active, fill with 'NA'
                 else:
