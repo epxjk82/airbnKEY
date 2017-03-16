@@ -22,7 +22,6 @@ let display_prediction = function(prediction) {
     $("span#predict").html(prediction.prediction)
 };
 
-
 $(document).ready(function() {
 
     $("button#predict").click(function() {

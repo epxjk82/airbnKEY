@@ -40,11 +40,15 @@
   <script type="text/javascript"
           src="{{ url_for('static', filename='app.js') }}">
   </script>
-
+  <!--
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBu-916DdpKAjTmJNIgngS6HL_kDIKU0aU&callback=myMap"></script>
+  -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjsflaax8lXnpSy3zggljklszzlQpstCs&callback=myMap"></script>
 </head>
 <body>
-  <img class="center fit"  src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/main_banner_v01.gif'>
 
+</script>
+  <img class="center fit"  src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/main_banner_v01.gif'>
 
   <table class="center fit" cellpadding=0>
     <tr>
@@ -101,11 +105,31 @@
        -->
 
        <span id="predict" style="font-size:30px;font-family:impact;color:#0099DF"></span>
+
+       <div id="map" style="width:450px;height:250px;background:yellow"></div>
+
       </td>
       <td width=15></td>
     </tr>
   </table>
 
+  <script type="text/javascript">
+
+  function myMap() {
+      var latlng = new google.maps.LatLng(47.608013, -122.335167);
+      var myOptions = {
+          zoom: 13,
+          center: latlng,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+      };
+      var map = new google.maps.Map(document.getElementById("map"),
+              myOptions);
+  }
+  google.maps.event.addDomListener(window, "load", myMap);
+  google.maps.event.addListener(myMap, 'click', function( event ){
+      alert( "Latitude: "+event.latLng.lat()+" "+", longitude: "+event.latLng.lng() );
+  });
+  </script>
 
 </body>
 </html>
