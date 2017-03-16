@@ -21,9 +21,12 @@ def index():
 def predict():
     """Recieve the lat-long inputs use the model to predict airbnb income
     """
+
+    # Get user provided lat-lng
     user_data = request.json
     lat,lng = user_data['lat'], user_data['lng']
-    #months = [1,2,3,4,5,6,7,8,9,10,11,12]
+
+    # Dummy codes for property type
     apt = 1
     bnb = 0
     cnd = 0
@@ -33,6 +36,8 @@ def predict():
     twn = 0
 
     input_data_base = np.array((lat, lng,0,0,0,0,0,0,0,0,0,0,0,0,apt,bnb,cnd,hse,lft,oth,twn)).reshape(1,-1)
+
+    # Adding month flag for each iteration
     input_data_list=[]
     for i in range(12):
         month_input_data = np.copy(input_data_base)
@@ -47,17 +52,20 @@ def predict():
         pred_list.append(str(pred))
         pred_list_int.append(int(pred))
 
+    # Convert to pandas Series for easy plotting
     pred_series = pd.Series.from_array(pred_list_int)
 
     # Saving plot to file
     cgfont = {'fontname':'Century Gothic'}
     x_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-    # now to plot the figure...
+    # Set plotting parameters
     plt.figure(figsize=(7, 4))
     ax = pred_series.plot(kind='bar', rot=0, grid=None, fontsize=13, color="#0099DF", width=0.7)
     ax.set_xticklabels(x_labels,**cgfont)
     ax.set_facecolor('white')
+
+    # Remove all axes for cleanliness
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
@@ -78,6 +86,8 @@ def predict():
         frameon=None)
 
     out_pred=[]
+
+    # Pair up strings for month and average prediction per month
     for mo, pred in zip(x_labels, pred_list):
         out_str = "{}: {}".format(mo, pred)
         out_pred.append(out_str)
