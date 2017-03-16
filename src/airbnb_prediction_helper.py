@@ -94,7 +94,7 @@ def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_lis
     y_pred, fitted_model = get_model_pred(model_estimator, X_train, X_test,y_train)
 
     # Get confidence intervals for predictions
-    fitted_model_CI_upper, fitted_model_CI_lower = get_model_confidence_interval(fitted_model, X_train, y_train, X_test, conf_interval)
+    fitted_model_CI_upper, fitted_model_CI_lower = get_model_confidence_interval(fitted_model, X_train, y_train, conf_interval)
 
     # Get error scores
     mse, r2 = mean_squared_error(y_test, y_pred), r2_score(y_test, y_pred)
