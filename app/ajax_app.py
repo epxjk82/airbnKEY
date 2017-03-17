@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.pyplot import savefig
 import matplotlib.pyplot as plt
+import ajax_app_helper as hlp
+
 app = Flask(__name__)
 
 
@@ -52,10 +54,10 @@ def predict():
         pred_list.append(str(pred))
         pred_list_int.append(int(pred))
 
-    # Convert to pandas Series for easy plotting
-    pred_series = pd.Series.from_array(pred_list_int)
-
     out_pred=[]
+
+    # Save figure
+    hlp.save_bar_chart_figure(pred_list_int)
 
     # Pair up strings for month and average prediction per month
     for mo, pred in zip(x_labels, pred_list):

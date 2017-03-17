@@ -1,7 +1,16 @@
+import numpy as np
+import pandas as pd
+from matplotlib.pyplot import savefig
+import matplotlib.pyplot as plt
+
 def save_bar_chart_figure(data, filepath):
     # Plot bar chart and save figure to file
     # --------------------------------------
     # Saving plot to file
+
+    # Convert to pandas Series for easy plotting
+    pred_series = pd.Series.from_array(data)
+
     cgfont = {'fontname':'Century Gothic'}
     x_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -18,7 +27,7 @@ def save_bar_chart_figure(data, filepath):
     ax.spines['left'].set_visible(False)
 
     rects = ax.patches
-    labels = pred_list
+    labels = data
 
     for rect, label in zip(rects, data):
         height = rect.get_height()
