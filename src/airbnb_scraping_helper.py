@@ -9,7 +9,9 @@ import pymongo
 import requests, bs4
 from requests import get
 from bs4 import BeautifulSoup
+from selenium import webdriver
 
+import boto3
 from os import listdir
 from os.path import isfile, join
 
@@ -147,7 +149,7 @@ def save_to_s3(bucket_name, room_id, timestamp, body):
 
     s3.Bucket(bucket_name).put_object(Key=keyname, Body=body)
 
-def scrape_data_from_urls(url_list,time_delay=15):
+def scrape_data_from_urls(url_list,city,time_delay=15, aws_save=False):
     """ Iterate through airbnb url_list and scrape relevant information from page
 
     INPUT:
@@ -163,8 +165,9 @@ def scrape_data_from_urls(url_list,time_delay=15):
                                                          datetime.date.today().day,
                                                          datetime.datetime.today().hour,
                                                          datetime.datetime.today().minute)
-    out_filename = 'data/airbnb_scraping/scraped_listing_info_{}.txt'.format(datestring)
+    out_filename = 'data/airbnb_scraping/{}/{}_scraped_listing_info_{}.txt'.format(city,city,datestring)
 
+    json_out_filename = 'data/airbnb_scraping/{}/{}_scraped_listing_info_{}.json'.format(city,city,datestring)
     print "Writing data to: {}".format(out_filename)
 
     # Open file for writing data
@@ -173,108 +176,115 @@ def scrape_data_from_urls(url_list,time_delay=15):
         # Initialize dictionary for page info
         page_info=defaultdict(list)
 
+        browser = webdriver.Firefox()
+
         # Iterate through url list
         for i,url in enumerate(url_list):
             time.sleep(time_delay+np.random.random()*15) # delays for few seconds
 
-            response = get(url)
+            response = browser.get(url)
 
-            if response.status_code != 200:
-                descriptions.append((i,"Error"))
-            else:
-                # Create BeautifulSoup object with html.parser
-                soup = BeautifulSoup(response.content, 'html.parser')
+        #if response.status_code != 200:
+            #descriptions.append((i,"Error"))
+        #else:
+            # Create BeautifulSoup object with html.parser
+            html = browser.page_source
+            soup = BeautifulSoup(browser.page_source, 'html.parser')
 
-                # Get property id
-                prop_id = url.split('/')[-1]
+            # Get property id
+            prop_id = url.split('/')[-1]
 
-                # Save html to s3
-                save_to_s3('airbnKEY-data',prop_id, datestring, response.content)
+            # Get listing title
+            title = soup.title.string.encode('utf-8', errors='ignore')
 
-                # Get listing title
-                title = soup.title.string.encode('utf-8', errors='ignore')
+            # Write data to file
+            outfile.write("prop_id: {}\n".format(prop_id))
 
+            # If listing is active
+            if (title.split()[0] != 'Airbnb:') & (title.split()[0] !='Vacation') & (title[:6] != 'Top 20'):
+                print "Getting ", url
+
+                #print "Writing html to s3...
+                if aws_save:
+                    save_to_s3('airbnkey-data',prop_id, datestring, html)
+
+                # Get listing description
+                p_list = soup.findAll('p')
+                if len(p_list) > 1:
+                    description = soup.findAll('p')[1].text.encode('utf-8', errors='ignore')
+                else:
+                    description = 'NA'
+
+                # Get listing information
+                info = get_listing_info(soup)
+
+                # Get metadata
+                metadata = soup.findAll('meta', attrs={'id':'_bootstrap-room_options'})
+                if len(metadata) > 0:
+                    d_meta = json.loads(str(metadata[0].get('content').encode('utf-8', errors='ignore')))
+                    d_meta = d_meta['airEventData']
+                    for key3, value3 in d_meta.items():
+                        # Write meta data to file
+                        outstring = "{}: {}\n".format(str(key3).strip(), str(value3).strip())
+                        outfile.write(outstring)
+                metadata2 = soup.findAll('meta', attrs={'id':'_bootstrap-neighborhood_card'})
+                if len(metadata2) > 0:
+                    neighborhood = json.loads(str(metadata2[0].get('content').encode('utf-8', errors='ignore')))
+                    neighborhood = neighborhood['neighborhood_localized_name']
+                else:
+                    neighborhood = 'NA'
+
+                metadata3 = soup.findAll('script', attrs={'data-hypernova-key': 'listingbundlejs'})
+                if len(metadata3) > 0:
+                    metadata3_json = json.loads(metadata3[0].text[4:-3])
+
+                    print "Writing json data to: {}".format(json_out_filename)
+                    with open(json_out_filename, 'a') as outfile_json:
+                        json.dump(metadata3_json['listing'], outfile_json)
+                        outfile_json.write('\n')
                 # Write data to file
-                outfile.write("prop_id: {}\n".format(prop_id))
+                outfile.write("title: {}\n".format(title))
+                outfile.write("description: {}\n".format(description))
+                outfile.write("neighborhood: {}\n".format(neighborhood))
 
-                # If listing is active
-                if (title.split()[0] != 'Airbnb:') & (title.split()[0] !='Vacation'):
+                # Get number of reviews
+                num_reviews_bs = soup.findAll('h4', attrs={'class':'col-middle va-bottom review-header-text text-center-sm'})
+                if len(num_reviews_bs)>0:
 
-                    # Get listing description
-                    p_list = soup.findAll('p')
-                    if len(p_list) > 1:
-                        description = soup.findAll('p')[1].text.encode('utf-8', errors='ignore')
+                    num_reviews = num_reviews_bs[0].text
+                    outfile.write("num_reviews: {}\n".format(num_reviews))
+
+                    # Determine how many full stars and half stars
+                    half_stars = soup.findAll('i', attrs={'class':'icon-star-half icon icon-babu icon-star-big'})
+                    full_stars = soup.findAll('i', attrs={'class':'icon-star icon icon-babu icon-star-big'})
+
+                    # If half rating
+                    if len(half_stars)>0:
+                        avg_rating = 0.5 + float(len(full_stars))
                     else:
-                        description = 'NA'
-
-                    # Get listing information
-                    info = get_listing_info(soup)
-
-                    # Get metadata
-                    metadata = soup.findAll('meta', attrs={'id':'_bootstrap-room_options'})
-                    if len(metadata) > 0:
-                        d_meta = json.loads(str(metadata[0].get('content').encode('utf-8', errors='ignore')))
-                        d_meta = d_meta['airEventData']
-                        for key3, value3 in d_meta.items():
-
-                            # Write meta data to file
-                            outstring = "{}: {}\n".format(str(key3).strip(), str(value3).strip())
-                            outfile.write(outstring)
-
-                    metadata2 = soup.findAll('meta', attrs={'id':'_bootstrap-neighborhood_card'})
-                    if len(metadata2) > 0:
-                        neighborhood = json.loads(str(metadata2[0].get('content').encode('utf-8', errors='ignore')))
-                        neighborhood = neighborhood['neighborhood_localized_name']
-                    else:
-                        neighborhood = 'NA'
+                        avg_rating = float(len(full_stars))
 
                     # Write data to file
-                    outfile.write("title: {}\n".format(title))
-                    outfile.write("description: {}\n".format(description))
-                    outfile.write("neighborhood: {}\n".format(neighborhood))
+                    outfile.write("avg_rating: {}\n".format(avg_rating))
 
-                    # Get number of reviews
-                    num_reviews_bs = soup.findAll('h4', attrs={'class':'col-middle va-bottom review-header-text text-center-sm'})
-                    if len(num_reviews_bs)>0:
+                for key2, value2 in info.items():
 
-                        num_reviews = num_reviews_bs[0].text
-                        outfile.write("num_reviews: {}\n".format(num_reviews))
-
-                        # Determine how many full stars and half stars
-                        half_stars = soup.findAll('i', attrs={'class':'icon-star-half icon icon-babu icon-star-big'})
-                        full_stars = soup.findAll('i', attrs={'class':'icon-star icon icon-babu icon-star-big'})
-
-                        # If half rating
-                        if len(half_stars)>0:
-                            avg_rating = 0.5 + float(len(full_stars))
-                        else:
-                            avg_rating = float(len(full_stars))
-
-                        # Write data to file
-                        outfile.write("avg_rating: {}\n".format(avg_rating))
-
-                    for key2, value2 in info.items():
-
-                        # Write listing information data to file
-                        outstring = "{}: {}\n".format(str(key2).strip(), str(value2).strip())
-                        outfile.write(outstring)
-
-
-
-                # Listing is not active, fill with 'NA'
-                else:
-                    title='NA'
-                    description = 'NA'
-                    info = 'NA'
-                    outfile.write("title: {}\n".format(title))
-                    outfile.write("description: {}\n".format(description))
-                    outfile.write("details: {}\n".format(info))
+                    # Write listing information data to file
+                    outstring = "{}: {}\n".format(str(key2).strip(), str(value2).strip())
+                    outfile.write(outstring)
 
                 print ("Iteration {}: prop_id {}, url {}".format(i, prop_id, url))
-                page_info[prop_id] = [title, description, info]
 
-            # Close response
-            response.close()
+
+            # Listing is not active, fill with 'NA'
+            else:
+                print ("NOT FOUND: Iteration {}: prop_id {}, url {}".format(i, prop_id, url))
+
+
+            #page_info[prop_id] = [title, description, info]
+
+        # Close response
+        #response.close()
 
     return out_filename
 
@@ -296,54 +306,6 @@ def load_urls_from_file(mypath='../data/airbnb_scraping/urls_by_zipcode/'):
                 airbnb_url_list.append(line.strip())
 
     return airbnb_url_list
-
-
-def import_txtfile_as_df(filepath):
-    """Convert data in txt files to pandas dataframe object
-
-    INPUT:
-    filepath: str (path to txt file with data)
-
-    OUTPUT: pandas df
-    """
-
-    datestamp0 = filepath.split('/')[-1].strip()
-    datestamp = ''.join([(char) for char in datestamp0 if char.isdigit()])
-
-    d=defaultdict()
-    d2=defaultdict()
-
-    #Ex.  filepath = 'data/airbnb_scraping/scraped_listing_info_20170313_ALL.txt'
-    with open(filepath) as f:
-        for i,line in enumerate(f):
-
-            # For first line, initialize prop_Id
-            if i==0:
-                cur_prop_id = line.split(':')[1].strip()
-
-            else:
-                if ':' in line:
-                    key = line.split(':')[0].strip()
-                    val = line.split(':')[1].strip()
-                    if key=='prop_id':
-                        d[cur_prop_id] = d2
-                        cur_prop_id = val
-                        d2=defaultdict()
-                    else:
-                        #print key, val
-                        d2[key] = val
-                # If line does not contain ":", then there is an unwanted line break
-                # Append this new line to previous key's value
-                else:
-                    print "Line break error on line ", i
-                    d2[key] = d2[key] + ' ' + line
-
-    df = pd.DataFrame.from_dict(d, orient='index', dtype=None)
-    df=df.reset_index()
-    df['url'] = df['index'].apply(lambda x: 'https://www.airbnb.com/rooms/{}'.format(x))
-    df['datestamp'] = datestamp
-    df.rename(columns={"index": "prop_id"}, inplace=True)
-    return df
 
 def export_df_to_csv(df, filepath, json=False):
     """ Export pandas df to csv and json (optional)
