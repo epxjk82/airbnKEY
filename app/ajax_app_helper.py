@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 from matplotlib.pyplot import savefig
 import matplotlib.pyplot as plt
+import datetime
 
-def save_bar_chart_figure(data, filepath):
+def save_bar_chart_figure(data, x_labels):
     # Plot bar chart and save figure to file
     # --------------------------------------
     # Saving plot to file
@@ -12,11 +13,10 @@ def save_bar_chart_figure(data, filepath):
     pred_series = pd.Series.from_array(data)
 
     cgfont = {'fontname':'Century Gothic'}
-    x_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
     # Set plotting parameters
-    plt.figure(figsize=(7, 4))
-    ax = pred_series.plot(kind='bar', rot=0, grid=None, fontsize=13, color="#0099DF", width=0.7)
+    plt.figure(figsize=(6, 3))
+    ax = pred_series.plot(kind='bar', rot=0, grid=None, fontsize=10, color="#FFA500", width=0.8, alpha=0.7)
     ax.set_xticklabels(x_labels,**cgfont)
     ax.set_facecolor('white')
 
@@ -31,11 +31,21 @@ def save_bar_chart_figure(data, filepath):
 
     for rect, label in zip(rects, data):
         height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width()/2, height + 1, label, ha='center', va='bottom', fontsize=16, **cgfont)
+        ax.text(rect.get_x() + rect.get_width()/2, height + 1, label, ha='center', va='bottom', fontsize=14, **cgfont)
 
     plt.yticks([])
 
-    savefig(filepath, dpi=None, facecolor='w', edgecolor=None,
+    datestring = '{:04d}{:02d}{:02d}{:02d}{:02d}'.format(datetime.date.today().year,
+                                                         datetime.date.today().month,
+                                                         datetime.date.today().day,
+                                                         datetime.datetime.today().hour,
+                                                         datetime.datetime.today().minute)
+
+    print "Saving figure..."
+    out_filepath = 'static/monthly_income.png'.format(datestring)
+    savefig(out_filepath, dpi=200, facecolor='w', edgecolor=None,
         orientation='portrait', papertype=None, format=None,
-        transparent=False, bbox_inches=None, pad_inches=0.0,
+        transparent=False,bbox_inches='tight', pad_inches=0.0,
         frameon=None)
+
+    return out_filepath

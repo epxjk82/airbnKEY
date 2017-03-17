@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 import pickle
 import numpy as np
 import pandas as pd
 from matplotlib.pyplot import savefig
 import matplotlib.pyplot as plt
 import ajax_app_helper as hlp
+import datetime
 
 app = Flask(__name__)
 
@@ -56,8 +57,10 @@ def predict():
 
     out_pred=[]
 
+    x_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
     # Save figure
-    hlp.save_bar_chart_figure(pred_list_int)
+    img_filepath = hlp.save_bar_chart_figure(pred_list_int,x_labels)
 
     # Pair up strings for month and average prediction per month
     for mo, pred in zip(x_labels, pred_list):
@@ -65,6 +68,7 @@ def predict():
         out_pred.append(out_str)
 
     out_pred = '\n'.join(out_pred)
+    # return send_file(img_filepath, mimetype='image/png')
     return jsonify({'prediction': out_pred})
 
 if __name__ == '__main__':

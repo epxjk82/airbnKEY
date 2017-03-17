@@ -26,6 +26,17 @@
   td {
     padding: 2px;
   }
+  .bar {
+  fill: steelblue;
+  }
+
+  .bar:hover {
+    fill: brown;
+  }
+
+  .axis--x path {
+    display: none;
+  }
 </style>
   <meta charset="utf-8">
 
@@ -69,6 +80,8 @@
 
         <p>Using machine learning models, this projects aims to estimate the monthly
            income from renting our a room on Airbnb. </p>
+        <br>
+        <div id="map" class='fitfull' style="width:500px;height:250px;background:yellow"></div>
 
       </td>
       <td valign=top width=50>
@@ -97,16 +110,17 @@
             </td>
           </tr>
        </table>
+       <br>
+
+       <img id='monthly_inc' alt="Chart Placeholder" class="fitfull" src='../../static/monthly_income.png' hidden>
        <!-- Image placeholder
        <img class="fit center" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/ex_55.png'>
-       <img class="fit center" src='monthly_income.png'>
-
        <span style="font-size:30px;font-family:impact;color=#D8D8D8">$</span>
        -->
 
        <span id="predict" style="font-size:30px;font-family:impact;color:#0099DF"></span>
 
-       <div id="map" style="width:450px;height:250px;background:yellow"></div>
+       <svg width="450" height="250"></svg>
 
       </td>
       <td width=15></td>
@@ -130,6 +144,7 @@
       alert( "Latitude: "+event.latLng.lat()+" "+", longitude: "+event.latLng.lng() );
   });
   </script>
+
 
 </body>
 </html>

@@ -13,7 +13,8 @@ let send_latlng_json = function(latlng) {
         type: 'POST',
         data: JSON.stringify(latlng),
         success: function (data) {
-            display_prediction(data);
+            // display_prediction(data);
+            $("img#monthly_inc").toggle();
         }
     });
 };
@@ -27,6 +28,7 @@ $(document).ready(function() {
     $("button#predict").click(function() {
         let latlng = get_input_latlng();
         send_latlng_json(latlng);
+
     })
 
 })
