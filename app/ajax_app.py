@@ -55,36 +55,6 @@ def predict():
     # Convert to pandas Series for easy plotting
     pred_series = pd.Series.from_array(pred_list_int)
 
-    # Saving plot to file
-    cgfont = {'fontname':'Century Gothic'}
-    x_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
-    # Set plotting parameters
-    plt.figure(figsize=(7, 4))
-    ax = pred_series.plot(kind='bar', rot=0, grid=None, fontsize=13, color="#0099DF", width=0.7)
-    ax.set_xticklabels(x_labels,**cgfont)
-    ax.set_facecolor('white')
-
-    # Remove all axes for cleanliness
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-
-    rects = ax.patches
-    labels = pred_list
-
-    for rect, label in zip(rects, pred_list):
-        height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width()/2, height + 1, label, ha='center', va='bottom', fontsize=16, **cgfont)
-
-    plt.yticks([])
-
-    savefig('templates/main/monthly_income', dpi=None, facecolor='w', edgecolor=None,
-        orientation='portrait', papertype=None, format=None,
-        transparent=False, bbox_inches=None, pad_inches=0.0,
-        frameon=None)
-
     out_pred=[]
 
     # Pair up strings for month and average prediction per month
