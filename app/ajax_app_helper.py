@@ -15,7 +15,7 @@ def save_bar_chart_figure(data, x_labels):
     cgfont = {'fontname':'Century Gothic'}
 
     # Set plotting parameters
-    plt.figure(figsize=(6, 3))
+    plt.figure(figsize=(6, 4))
     ax = pred_series.plot(kind='bar', rot=0, grid=None, fontsize=10, color="#FFA500", width=0.8, alpha=0.7)
     ax.set_xticklabels(x_labels,**cgfont)
     ax.set_facecolor('white')

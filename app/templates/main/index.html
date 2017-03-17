@@ -9,7 +9,7 @@
     padding: 0px;
     margin: 0;
     font-family: Century Gothic;
-    font-size:18px;
+    font-size:14px;
   }
   .fit { /* set relative picture size */
     max-width: 80%;
@@ -59,9 +59,9 @@
 <body>
 
 </script>
-  <img class="center fit"  src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/main_banner_v01.gif'>
+  <img class="center fit" width=1200 src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/main_banner_v01.gif'>
 
-  <table class="center fit" cellpadding=0>
+  <table class="center fitfull" width=1200 cellpadding=0>
     <tr>
       <td valign=top width=250>
       <img class="fitfull" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/left_rooms.png'>
@@ -69,38 +69,37 @@
       <td valign=top width=20>
       </td>
       <td valign=top align=left>
-        <h1>Home Affordability with Airbnb</h1>
-        <p>Home affordability continues to be a major challenge in many metropolitan areas.
-          With housing prices outpacing wages and escalating student debt levels,
-          it has become increasingly difficult for prospective home buyers to fulfill
-          the American dream.</p><br>
-
-        <p>Fortunately, homeowners now have the option to Airbnb spare rooms in their new
-          homes to help pay for the mortgage. </p><br>
+        <h2>Home Affordability with Airbnb</h2>
+        <p>Home affordability has become a major challenge in the Greater Seattle Area (47.6062° N, 122.3321° W).
+          Fortunately, homeowners now have the option to Airbnb rooms in their new
+          homes to help pay for the mortgage. </p>
 
         <p>Using machine learning models, this projects aims to estimate the monthly
            income from renting our a room on Airbnb. </p>
-        <br>
+
+        <input id="addressinput" type="text" style="width: 400px" placeholder='111 S Jackson St, Seattle, WA 98104'/>
+        <input id="Button1" style="font-size : 15px" type="button" value="Find" onclick="return Button1_onclick()"/>
+        <br><br>
         <div id="map" class='fitfull' style="width:500px;height:250px;background:yellow"></div>
 
       </td>
       <td valign=top width=50>
       </td>
-      <td valign=top align=left width=450>
-        <h1>Prediction</h1>
+      <td valign=top align=left width=400>
+        <h2>Prediction</h2>
 
         <table>
           <tr>
             <td>
               <div class="form-group">
                 <label for="lat">Latitude:</label>
-                <input class="form-control" type="text" id="lat" style="font-size : 20px"></input>
+                <input class="form-control" type="text" id="lat" style="font-size : 20px"  placeholder='47.6062'></input>
               </div>
             </td>
             <td>
               <div class="form-group">
                 <label for="lng">Longitude:</label>
-                <input class="form-control" type="text" id="lng" style="font-size : 20px"></input>
+                <input class="form-control" type="text" id="lng" style="font-size : 20px" placeholder='122.3321'></input>
               </div>
           </td>
             <td colspan=2 valign=bottom>
@@ -120,29 +119,58 @@
 
        <span id="predict" style="font-size:30px;font-family:impact;color:#0099DF"></span>
 
-       <svg width="450" height="250"></svg>
+       <svg width="400" height="250"></svg>
 
       </td>
       <td width=15></td>
     </tr>
   </table>
 
-  <script type="text/javascript">
+  <script language="javascript" type="text/javascript">
 
-  function myMap() {
-      var latlng = new google.maps.LatLng(47.608013, -122.335167);
-      var myOptions = {
-          zoom: 13,
-          center: latlng,
-          mapTypeId: google.maps.MapTypeId.ROADMAP
-      };
-      var map = new google.maps.Map(document.getElementById("map"),
-              myOptions);
-  }
-  google.maps.event.addDomListener(window, "load", myMap);
-  google.maps.event.addListener(myMap, 'click', function( event ){
-      alert( "Latitude: "+event.latLng.lat()+" "+", longitude: "+event.latLng.lng() );
-  });
+      var map;
+      var geocoder;
+      function InitializeMap() {
+
+          var latlng = new google.maps.LatLng(47.6062, -122.3321);
+          var myOptions =
+          {
+              zoom: 13,
+              center: latlng,
+              mapTypeId: google.maps.MapTypeId.ROADMAP,
+              disableDefaultUI: true
+          };
+          map = new google.maps.Map(document.getElementById("map"), myOptions);
+      }
+
+      function FindLocation() {
+          geocoder = new google.maps.Geocoder();
+          InitializeMap();
+
+          var address = document.getElementById("addressinput").value;
+          geocoder.geocode({ 'address': address }, function (results, status) {
+              if (status == google.maps.GeocoderStatus.OK) {
+                  map.setCenter(results[0].geometry.location);
+                  var marker = new google.maps.Marker({
+                      map: map,
+                      position: results[0].geometry.location
+                  });
+
+              }
+              else {
+                  alert("Geocode was not successful for the following reason: " + status);
+              }
+          });
+
+      }
+
+
+      function Button1_onclick() {
+          FindLocation();
+      }
+
+      window.onload = InitializeMap;
+
   </script>
 
 
