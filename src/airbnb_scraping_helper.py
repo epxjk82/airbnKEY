@@ -141,6 +141,12 @@ def get_listing_info(soup):
 
     return info_dict
 
+def save_to_s3(bucket_name, room_id, timestamp, body):
+    s3 = boto3.resource('s3')
+    keyname = 'html/room_{}_{}.html'.format(room_id, timestamp)
+
+    s3.Bucket(bucket_name).put_object(Key=keyname, Body=body)
+
 def scrape_data_from_urls(url_list,time_delay=15):
     """ Iterate through airbnb url_list and scrape relevant information from page
 
@@ -181,6 +187,9 @@ def scrape_data_from_urls(url_list,time_delay=15):
 
                 # Get property id
                 prop_id = url.split('/')[-1]
+
+                # Save html to s3
+                save_to_s3('airbnKEY-data',prop_id, datestring, response.content)
 
                 # Get listing title
                 title = soup.title.string.encode('utf-8', errors='ignore')
