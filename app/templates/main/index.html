@@ -37,6 +37,19 @@
   .axis--x path {
     display: none;
   }
+
+  .button {
+    background-color: #50A5FA;
+    border: none;
+    color: white;
+    padding: 2px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    border-radius: 2px;
+}
+
 </style>
   <meta charset="utf-8">
 
@@ -77,8 +90,8 @@
         <p>Using machine learning models, this projects aims to estimate the monthly
            income from renting our a room on Airbnb. </p>
 
-        <input id="addressinput" type="text" style="width: 400px" placeholder='111 S Jackson St, Seattle, WA 98104'/>
-        <input id="Button1" style="font-size : 15px" type="button" value="Find" onclick="return Button1_onclick()"/>
+        <input id="addressinput" type="text" style="width: 415px;font-size:20px" placeholder='111 S Jackson St, Seattle, WA 98104'/>
+        <input id="Button1" class='button' style="font-size : 20px" type="button" value="Find" onclick="return Button1_onclick()"/>
         <br><br>
         <div id="map" class='fitfull' style="width:500px;height:250px;background:yellow"></div>
 
@@ -93,18 +106,18 @@
             <td>
               <div class="form-group">
                 <label for="lat">Latitude:</label>
-                <input class="form-control" type="text" id="lat" style="font-size : 20px"  placeholder='47.6062'></input>
+                <input class="form-control" type="text" id="lat" style="font-size : 18px"  placeholder='47.6062'></input>
               </div>
             </td>
             <td>
               <div class="form-group">
                 <label for="lng">Longitude:</label>
-                <input class="form-control" type="text" id="lng" style="font-size : 20px" placeholder='122.3321'></input>
+                <input class="form-control" type="text" id="lng" style="font-size : 18px" placeholder='122.3321'></input>
               </div>
           </td>
-            <td colspan=2 valign=bottom>
+            <td colspan=2 valign="bottom">
               <div class="form-group">
-                <button type="button" id="predict" class="btn btn-default" style="font-size : 15px">Predict!</button>
+                <button type="button" id="predict" class="button fitfull" style="font-size : 20px">Predict!</button>
               </div>
             </td>
           </tr>
