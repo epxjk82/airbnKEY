@@ -93,14 +93,15 @@ def convert_json_desc_to_df(json_data):
     for i, item in enumerate(json_data):
         listing_id = json_data[i]['id']
         new_d={}
-        for key, val in json_data[i]['sectioned_description'].iteritems():
-            #print key, type(val)
-            if type(val) is dict:
-                new_d[key]=val['value']
-            else:
-                new_d[key]=val
+        if json_data[i]['sectioned_description']:
+            for key, val in json_data[i]['sectioned_description'].iteritems():
+                #print key, type(val)
+                if type(val) is dict:
+                    new_d[key]=val['value']
+                else:
+                    new_d[key]=val
 
-            id_d[listing_id] = new_d
+                id_d[listing_id] = new_d
 
     df = pd.DataFrame.from_dict(id_d, orient='index')
     return df
