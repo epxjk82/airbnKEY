@@ -4,53 +4,54 @@
 <head>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
-<style>
-  * {
-    padding: 0px;
-    margin: 0;
-    font-family: Century Gothic;
-    font-size:14px;
-  }
-  .fit { /* set relative picture size */
-    max-width: 80%;
-    max-height: 100%;
-  }
-  .fitfull { /* set relative picture size */
-    max-width: 100%;
-    max-height: 100%;
-  }
-  .center {
-    display: block;
-    margin: auto;
-  }
-  td {
-    padding: 2px;
-  }
-  .bar {
-  fill: steelblue;
-  }
+  <style>
+    * {
+      padding: 0px;
+      margin: 0;
+      font-family: Century Gothic;
+      font-size:14px;
+    }
+    .fit { /* set relative picture size */
+      max-width: 80%;
+      max-height: 100%;
+    }
+    .fitfull { /* set relative picture size */
+      max-width: 100%;
+      max-height: 100%;
+    }
+    .center {
+      display: block;
+      margin: auto;
+    }
+    td {
+      padding: 15px;
+    }
+    .button {
+      background-color: #50A5FA;
+      border: none;
+      color: white;
+      padding: 2px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+      border-radius: 2px;
+    }
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #FFFFFF;
+      shape-rendering: crispEdges;
+    }
+    .chart rect{
+      fill: steelblue;
+    }
+    .chart text{
+      fill: white;
+      font: 10px sans-serif;
+    }
+  </style>
 
-  .bar:hover {
-    fill: brown;
-  }
-
-  .axis--x path {
-    display: none;
-  }
-
-  .button {
-    background-color: #50A5FA;
-    border: none;
-    color: white;
-    padding: 2px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 14px;
-    border-radius: 2px;
-}
-
-</style>
   <meta charset="utf-8">
 
   <title>Home Affordability with Airbnb</title>
@@ -61,84 +62,81 @@
   <script type="text/javascript"
           src="{{ url_for('static', filename='jquery.js') }}">
   </script>
-  <script type="text/javascript"
+  <!-- <script type="text/javascript"
           src="{{ url_for('static', filename='app.js') }}">
-  </script>
-  <!--
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBu-916DdpKAjTmJNIgngS6HL_kDIKU0aU&callback=myMap"></script>
-  -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjsflaax8lXnpSy3zggljklszzlQpstCs&callback=myMap"></script>
+  </script> -->
+
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjsflaax8lXnpSy3zggljklszzlQpstCs"></script>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+
 </head>
 <body>
 
-</script>
-  <img class="center fit" width=1200 src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/main_banner_v01.gif'>
+  <!-- <img width=1200 src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/main_banner_v01.gif'> -->
+  <img width=1200 class="center" src='static/main_banner_v01.gif'>
 
-  <table class="center fitfull" width=1200 cellpadding=0>
+  <table class="center fitfull" width=1200 cellpadding=10>
     <tr>
-      <td valign=top width=250>
-      <img class="fitfull" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/left_rooms.png'>
+      <td valign="top" width="200">
+        <!-- <img class="fitfull" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/left_rooms.png'> -->
+        <img src='static/left_rooms.jpg'>
       </td>
-      <td valign=top width=20>
-      </td>
-      <td valign=top align=left>
+      <td valign="top" align="left" width="500">
         <h2>Home Affordability with Airbnb</h2>
         <p>Home affordability has become a major challenge in the Greater Seattle Area (47.6062° N, 122.3321° W).
           Fortunately, homeowners now have the option to Airbnb rooms in their new
           homes to help pay for the mortgage. </p>
 
         <p>Using machine learning models, this projects aims to estimate the monthly
-           income from renting our a room on Airbnb. </p>
+           income from renting out a room on Airbnb. </p>
 
-        <input id="addressinput" type="text" style="width: 415px;font-size:20px" placeholder='111 S Jackson St, Seattle, WA 98104'/>
-        <input id="Button1" class='button' style="font-size : 20px" type="button" value="Find" onclick="return Button1_onclick()"/>
+        <input id="addressinput" type="text" style="width:415px;font-size:20px" value='111 S Jackson St, Seattle, WA 98104'/>
+        <input id="Button1" class="button" style="font-size:20px" type="button" value="Find" onclick="return Button1_onclick()"/>
         <br><br>
-        <div id="map" class='fitfull' style="width:500px;height:250px;background:yellow"></div>
+        <div id="map" style="width:500px;height:250px;background:yellow"></div>
+      </td>
 
-      </td>
-      <td valign=top width=50>
-      </td>
-      <td valign=top align=left width=400>
+      <td valign="top" align="left" width=400>
+
         <h2>Prediction</h2>
-
         <table>
           <tr>
-            <td>
+            <td style="padding: 2px">
               <div class="form-group">
                 <label for="lat">Latitude:</label>
-                <input class="form-control" type="text" id="lat" style="font-size : 18px"  placeholder='47.6062'></input>
+                <input class="form-control" width="150" type="text" id="lat" style="font-size : 16px"  value='47.6062'></input>
               </div>
             </td>
-            <td>
+            <td style="padding: 2px">
               <div class="form-group">
                 <label for="lng">Longitude:</label>
-                <input class="form-control" type="text" id="lng" style="font-size : 18px" placeholder='122.3321'></input>
+                <input class="form-control" width="150" type="text" id="lng" style="font-size : 16px" value='-122.3321'></input>
               </div>
-          </td>
-            <td colspan=2 valign="bottom">
+            </td>
+            <td  style="padding: 2px" valign="bottom">
               <div class="form-group">
-                <button type="button" id="predict" class="button fitfull" style="font-size : 20px">Predict!</button>
+                <button type="button" id="predict" width="100" class="button" style="font-size : 21px">Predict!</button>
               </div>
             </td>
           </tr>
-       </table>
-       <br>
+        </table>
 
-       <img id='monthly_inc' alt="Chart Placeholder" class="fitfull" src='../../static/monthly_income.png' hidden>
-       <!-- Image placeholder
-       <img class="fit center" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/ex_55.png'>
-       <span style="font-size:30px;font-family:impact;color=#D8D8D8">$</span>
-       -->
+        <!-- Image placeholder
+        <img id='monthly_inc' alt="Chart Placeholder" class="fitfull" src='../../static/monthly_income.png' hidden>
+        <img class="fit center" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/ex_55.png'>
+        <span style="font-size:30px;font-family:impact;color=#D8D8D8">$</span>
+        -->
 
-       <span id="predict" style="font-size:30px;font-family:impact;color:#0099DF"></span>
+        <br>
+        <svg class="chart"></svg>
+        <div id="predictions"></div>
 
-       <svg width="400" height="250"></svg>
-
-      </td>
-      <td width=15></td>
     </tr>
   </table>
 
+  <!--
+  Google map plugin ============================================================
+  -->
   <script language="javascript" type="text/javascript">
 
       var map;
@@ -177,7 +175,6 @@
 
       }
 
-
       function Button1_onclick() {
           FindLocation();
       }
@@ -186,6 +183,118 @@
 
   </script>
 
+  <script>
+  // Set the dimensions of the canvas / graph
+  var margin = {top: 20, right: 20, bottom: 70, left: 40},
+      width = 400 - margin.left - margin.right,
+      height = 300 - margin.top - margin.bottom;
+      barHeight= 20;
 
+  // Set the ranges
+  var x = d3.scale.linear()
+            .range([0,width]);
+
+  var chart = d3.select(".chart")
+                .attr("width",width);
+
+  d3.csv("/static/pred.csv", function(data) {
+    data.forEach(function(d) {
+        d.prediction = +d.prediction;
+    });
+
+      x.domain([0,d3.max(data,function(d){return d.prediction;})])
+
+      chart.attr("height", barHeight*12);
+
+      var bar = chart.selectAll("g")
+                     .data(data)
+                     .enter().append("g")
+                  .attr("transform",function(d,i){return "translate(0,"+i*barHeight+")"});
+
+      rect = bar.append("rect")
+        .attr("width","1").attr("height",barHeight-1).attr("padding","5");
+
+      rect.transition()
+        .attr("width",function(d){return x(d.prediction);}).duration(1000);
+
+      bar.append("text")
+        //.attr("x",function(d){return x(d.prediction)+5})
+        .attr("x",5)
+        .attr("y",barHeight/2)
+        .attr("dy",".35em").text(function(d){return d.month});
+
+      bar.append("text")
+        .attr("x",function(d){return x(d.prediction)-5})
+        .attr("y",barHeight/2)
+        .attr("dy",".35em").text(function(d){return d.prediction})
+        .style("text-anchor","end");
+
+  });
+
+  let get_input_latlng = function() {
+        let lat = $("input#lat").val()
+        let lng = $("input#lng").val()
+        return {'lat': parseFloat(lat),
+                'lng': parseFloat(lng)
+               }
+  };
+
+  let make_prediction = function(latlng) {
+        $.ajax({
+            url: '/predict',
+            contentType: "application/json; charset=utf-8",
+            type: 'POST',
+            data: JSON.stringify(latlng),
+            success: function (data) {
+                //display_prediction(data);
+                //$("img#monthly_inc").toggle();
+                //$("span#predict").html(data)
+
+                x.domain([0,d3.max(data,function(d){return d.prediction;})])
+
+                chart.attr("height", barHeight*data.length);
+
+                var bar = chart.selectAll("g")
+                               .data(data)
+                               .enter().append("g")
+                            .attr("transform",function(d,i){return "translate(0,"+i*barHeight+")"});
+
+                rect = bar.append("rect")
+                  .attr("width","1").attr("height",barHeight-1).attr("padding","5");
+
+                rect.transition()
+                  .attr("width",function(d){return x(d.prediction);}).duration(1000);
+
+                bar.append("text")
+                  //.attr("x",function(d){return x(d.prediction)+5})
+                  .attr("x",5)
+                  .attr("y",barHeight/2)
+                  .attr("dy",".35em").text(function(d){return d.month});
+
+                bar.append("text")
+                  .attr("x",function(d){return x(d.prediction)-5})
+                  .attr("y",barHeight/2)
+                  .attr("dy",".35em").text(function(d){return d.prediction})
+                  .style("text-anchor","end");
+
+                function type(d){
+                  data.prediction = +data.prediction;//coerce to number
+                  return d;
+                }
+            }
+        });
+  };
+
+  $(document).ready(function() {
+
+        $("button#predict").click(function() {
+
+            make_prediction(get_input_latlng());
+
+        });
+
+  });
+
+ </script>
 </body>
 </html>

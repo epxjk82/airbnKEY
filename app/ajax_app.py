@@ -20,6 +20,14 @@ def index():
     lat-long coordinates"""
     return render_template('main/index.html')
 
+@app.route("/build-chart", methods=['POST', 'GET'])
+def build_chart():
+    id = request.form['id']
+    table = clean_dataframe(vertica_query(id))
+    chart_json = parse_to_json(table)
+
+    return render_template('render.html', data=table, chart_json=chart_json)
+
 @app.route('/predict', methods=['POST'])
 def predict():
     """Recieve the lat-long inputs use the model to predict airbnb income
@@ -47,29 +55,31 @@ def predict():
         month_input_data[:,i+2]=1
         input_data_list.append(month_input_data)
 
-    pred_list=[]
     pred_list_int=[]
 
     for input_data in input_data_list:
         pred = int(model.predict(input_data)[0])
-        pred_list.append(str(pred))
         pred_list_int.append(int(pred))
 
-    out_pred=[]
-
-    x_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    month_list = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
     # Save figure
-    img_filepath = hlp.save_bar_chart_figure(pred_list_int,x_labels)
+    # img_filepath = hlp.save_bar_chart_figure(pred_list_int,x_labels)
 
-    # Pair up strings for month and average prediction per month
-    for mo, pred in zip(x_labels, pred_list):
-        out_str = "{}: {}".format(mo, pred)
-        out_pred.append(out_str)
+    # Save results to csv
+    pred_df = pd.DataFrame(zip(month_list, pred_list_int), columns=['month', 'prediction']).set_index('month')
+    # pred_df.to_csv('static/pred.csv')
+    # pred_df.to_json('static/pred_new.json')
 
-    out_pred = '\n'.join(out_pred)
-    # return send_file(img_filepath, mimetype='image/png')
-    return jsonify({'prediction': out_pred})
+    json_list = []
+    for month, pred in zip(month_list, pred_list_int):
+        d = {}
+        d['month'] = month
+        d['prediction'] = pred
+        json_list.append(d)
+
+    print pred_list_int
+    return jsonify(json_list)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
