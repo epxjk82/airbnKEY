@@ -131,6 +131,55 @@ def plot_boxplot_sorted(df, by, column, rot=0, fontsize=8, figsize=(12,6), jitte
         ax.set_ylim(0,upper_lim)
     plt.show()
 
+def plot_boxplot_compare(df, by, column1, column2, rot=0, fontsize=8, figsize=(12,6), jitter_offset=0.0, sort_flag=True, show_outliers=True):
+
+    fig, ax = plt.subplots(1,figsize=figsize)
+
+    sorted_groups = df.groupby(by).mean()[column1].sort_values(ascending=False).index
+
+    whiskerprops1 = dict(linestyle='--', linewidth=0.5, color='black')
+    medianprops1 = dict(linestyle='--', linewidth=2., color='black')
+    data1 = [df[df[by]==group][column1] for group in sorted_groups ]
+    box1 = ax.boxplot(data1, labels=sorted_groups, widths=0.4, medianprops=medianprops1);
+
+    capprops2 = dict(linestyle='--', linewidth=1.0, color='red')
+    whiskerprops2 = dict(linestyle='--', linewidth=0.5, color='red')
+    boxprops2 = dict(linestyle='--', linewidth=0.5, color='red')
+    medianprops2 = dict(linestyle='--', linewidth=2., color='red')
+    data2 = [df[df[by]==group][column2] for group in sorted_groups ]
+    box2 = ax.boxplot(data2, labels=sorted_groups, patch_artist=True, widths=0.4,
+                      boxprops=boxprops2, medianprops=medianprops2, capprops=capprops2, whiskerprops=whiskerprops2)
+
+    for box in box2['boxes']:
+        box.set_alpha(0.3)
+        box.set_facecolor('red')
+
+    for i,d in enumerate(sorted_groups):
+        y = df[df[by]==d][column1]
+        x = np.random.normal(i+1+jitter_offset, 0.02, len(y))
+        ax.plot(x, y, ms=3, marker="o", linestyle="None", alpha=0.5, c='black')
+    #ax.boxplot()
+    for i,d in enumerate(sorted_groups):
+        y = df[df[by]==d][column2]
+        x = np.random.normal(i+1.1+jitter_offset, 0.02, len(y))
+        ax.plot(x, y, ms=3, marker="o", linestyle="None", alpha=0.5, c='red')
+    #ax.boxplot()
+
+    ax.set_ylabel=(column1)
+    ax.set_title("{} by {}\n".format(column1, by), fontsize=fontsize)
+    ax.set_xticklabels(ax.xaxis.get_majorticklabels(), rotation=rot)
+    ax.set_facecolor('white')
+    #x.grid(linestyle='dotted', linewidth='0.5', color='gray')
+    ax.yaxis.grid(True, linestyle='dotted', linewidth='0.5', color='gray')
+    # if not show_outliers:
+    #     iqr = df[column].quantile(0.75) - df[column].quantile(0.25)
+    #     upper_lim = df[column].quantile(0.75)+3*iqr
+    #     ax.set_ylim(0,upper_lim)
+    plt.xticks(fontsize=fontsize)
+    plt.yticks(fontsize=fontsize)
+    plt.show()
+
+
 def plot_corr_matrix_heatmap(df, annot=True):
     corr_matrix = df.corr(method='pearson', min_periods=1)
     mask = np.zeros_like(corr_matrix, dtype=np.bool)
