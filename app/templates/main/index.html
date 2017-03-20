@@ -251,7 +251,7 @@
                 //$("span#predict").html(data)
 
                 x.domain([0,d3.max(data,function(d){return d.prediction;})])
-
+                $(".chart").empty()
                 chart.attr("height", barHeight*data.length);
 
                 var bar = chart.selectAll("g")
