@@ -165,18 +165,20 @@ def plot_boxplot_compare(df, by, column1, column2, rot=0, fontsize=8, figsize=(1
         ax.plot(x, y, ms=3, marker="o", linestyle="None", alpha=0.5, c='red')
     #ax.boxplot()
 
-    ax.set_ylabel=(column1)
+    ax.set_ylabel(column1)
     ax.set_title("{} by {}\n".format(column1, by), fontsize=fontsize)
     ax.set_xticklabels(ax.xaxis.get_majorticklabels(), rotation=rot)
     ax.set_facecolor('white')
     #x.grid(linestyle='dotted', linewidth='0.5', color='gray')
     ax.yaxis.grid(True, linestyle='dotted', linewidth='0.5', color='gray')
+    #ax.set_ylabel('EDR by month')
     # if not show_outliers:
     #     iqr = df[column].quantile(0.75) - df[column].quantile(0.25)
     #     upper_lim = df[column].quantile(0.75)+3*iqr
     #     ax.set_ylim(0,upper_lim)
     plt.xticks(fontsize=fontsize)
     plt.yticks(fontsize=fontsize)
+
     plt.show()
 
 
