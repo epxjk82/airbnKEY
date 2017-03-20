@@ -157,7 +157,7 @@ def plot_feature_importances(fitted_model, X_train):
     plt.show()
     #plt.savefig('plots/feature-importances.png', bbox_inches='tight')
 
-def plot_partial_dependency_plots(fitted_model, X_train, n_col=3, n_row=3, xlabel_height=20):
+def plot_partial_dependency_plots(fitted_model, X_train, n_col=3, n_row=3, xlabel_height=20, figsize=(12.0, 12.0)):
     N_COLS = n_col
     N_ROWS = n_row
     features_names = X_train.columns
@@ -172,7 +172,7 @@ def plot_partial_dependency_plots(fitted_model, X_train, n_col=3, n_row=3, xlabe
     pd_plots = list(reversed(zip([pdp[0][0] for pdp in pd_plots], [pdp[1][0] for pdp in pd_plots])))
 
     fig, axes = plt.subplots(nrows=N_ROWS, ncols=N_COLS, sharey=True,
-                             figsize=(12.0, 12.0))
+                             figsize=figsize)
 
     for i, (y_axis, x_axis) in enumerate(pd_plots[0:(N_ROWS*N_COLS)]):
         ax = axes[i/N_COLS, i%N_COLS]
@@ -256,11 +256,12 @@ def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=10,N_ESTIMATORS = 
     plt.xlabel('Number of Boosting Stages', fontsize=14)
     plt.ylabel('Average Squared Error', fontsize=14)
     plt.legend(loc="upper right")
+    print optimal_point
 
 
 def get_loftium_train_test_split(df):
     insample_prop_ids = []
-    with open('data/Loftium/insample_prop_ids.txt') as infile:
+    with open('../data/Loftium/insample_prop_ids.txt') as infile:
         for line in infile:
             insample_prop_ids.append(int(line.strip()))
 
