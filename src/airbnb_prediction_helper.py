@@ -63,6 +63,46 @@ def get_model_confidence_interval(fitted_model, X_train, y_train, conf_interval=
 
     return model_CI_upper, model_CI_lower
 
+def get_bootstrap_mse_score_dist(estimator, df, target, num_bootstrap = 100):
+    """Determines and plots the distribution of model performance (mse) using bootstrapping
+
+    Parameters
+    ----------
+    estimator: sklearn-type class
+        A model (class) that has been initialized with set parameters
+    df: pandas DataFrame
+        Full data set
+    target : str
+        Name of the target column in the dataset
+    num_bootstrap : int
+        Number of bootstrapping iterations to run
+
+    Returns
+    -------
+    mse_scores : list of mse scores
+    """
+
+    mse_scores = []
+    for i in range(num_bootstrap):
+
+        # Getting bootstrap indices for train
+        boot_sample_range = np.array(range(0, len(df.index)))
+        boot_sample_idx = np.random.choice(boot_sample_range, len(df.index), replace=True)
+        boot_out_sample_idx = np.setdiff1d(boot_sample_range, boot_sample_idx)
+
+        X_train = df.iloc[boot_sample_idx]   # bootstrap sample
+        y_train = X_train.pop(target)
+
+        # Assigning non-bootstrap indices for test set
+        X_test = df.iloc[boot_out_sample_idx]
+        y_test = X_test.pop(target)
+
+        estimator.fit(X_train, y_train)
+        mse_scores.append(mean_squared_error(y_test, estimator.predict(X_test)))
+
+    plt.hist(mse_scores, bins=30, alpha=0.5);
+    return mse_scores
+
 def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_list, index='Property_ID', conf_interval=0.90, loft_sample=False):
     """Fits GradientBoostingRegressor models for specified features and returns predictions
 
