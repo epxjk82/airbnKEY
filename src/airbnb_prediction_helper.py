@@ -63,7 +63,7 @@ def get_model_confidence_interval(fitted_model, X_train, y_train, conf_interval=
 
     return model_CI_upper, model_CI_lower
 
-def get_bootstrap_mse_score_dist(estimator, df, target, num_bootstrap = 100):
+def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearch=False):
     """Determines and plots the distribution of model performance (mse) using bootstrapping
 
     Parameters
@@ -82,25 +82,48 @@ def get_bootstrap_mse_score_dist(estimator, df, target, num_bootstrap = 100):
     mse_scores : list of mse scores
     """
 
+    if gridsearch:
+        print "Running grid search ..."
+        grid_params = {'learning_rate': [ 0.001, 0.01],
+                   'max_features': ['sqrt', 'log2', None],
+                   'min_samples_leaf': [1,2,4],
+                   'max_depth':[1,2,5],
+                   'n_estimators': [500, 1000, 4000],
+                   'subsample': [0.2, 0.5, 1.0]
+                  }
+
+        gdbr_gridsearch = GridSearchCV(GradientBoostingRegressor(),
+                                       grid_params, n_jobs=-1, verbose=True)
+
     mse_scores = []
     for i in range(num_bootstrap):
-
+        if i%100==0:
+            print "Running iteration {} ...".format(i)
         # Getting bootstrap indices for train
-        boot_sample_range = np.array(range(0, len(df.index)))
-        boot_sample_idx = np.random.choice(boot_sample_range, len(df.index), replace=True)
+        boot_sample_range = np.array(range(0, len(X.index)))
+        boot_sample_idx = np.random.choice(boot_sample_range, len(X.index), replace=True)
         boot_out_sample_idx = np.setdiff1d(boot_sample_range, boot_sample_idx)
 
-        X_train = df.iloc[boot_sample_idx]   # bootstrap sample
-        y_train = X_train.pop(target)
+        X_train = X.copy().iloc[boot_sample_idx]   # bootstrap sample
+        y_train = y.copy().iloc[boot_sample_idx]
 
         # Assigning non-bootstrap indices for test set
-        X_test = df.iloc[boot_out_sample_idx]
-        y_test = X_test.pop(target)
+        X_test = X.copy().iloc[boot_out_sample_idx]
+        y_test = y.copy().iloc[boot_out_sample_idx]
 
+        if gridsearch:
+
+            gdbr_gridsearch.fit(X_train, y_train)
+            estimator = gdbr_gridsearch.best_estimator_
+
+        #print "Fitting model ..."
         estimator.fit(X_train, y_train)
         mse_scores.append(mean_squared_error(y_test, estimator.predict(X_test)))
 
-    plt.hist(mse_scores, bins=30, alpha=0.5);
+    mse_scores_mean = sum(mse_scores)/len(mse_scores)
+    #plt.hist(mse_scores, bins=30, alpha=0.5);
+    #plt.axvline(mse_scores_mean)
+    print "Mean MSE:",mse_scores_mean
     return mse_scores
 
 def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_list, index='Property_ID', conf_interval=0.90, loft_sample=False):
@@ -230,7 +253,7 @@ def plot_partial_dependency_plots(fitted_model, X_train, n_col=3, n_row=3, xlabe
     plt.show()
     #plt.savefig('plots/patial-dependence-plots.png', bbox_inches='tight')
 
-def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=10,N_ESTIMATORS = 2500):
+def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=5,N_ESTIMATORS = 2500):
     """A cross validation plotter that shows mse vs number of boosted stages
 
     Parameters
