@@ -10,7 +10,7 @@ import datetime
 app = Flask(__name__)
 
 
-with open('static/cl_gdbr_monthly_model.pkl') as f:
+with open('static/model_key_model_merge_gdbr1.pkl') as f:
     model = pickle.load(f)
 
 
@@ -35,28 +35,73 @@ def predict():
 
     # Get user provided lat-lng
     user_data = request.json
-    lat,lng = user_data['lat'], user_data['lng']
+    latitude,longitude = user_data['lat'], user_data['lng']
 
-    # Dummy codes for property type
-    apt = 1
-    bnb = 0
-    cnd = 0
-    hse = 0
-    lft = 0
-    oth = 0
-    twn = 0
 
-    input_data_base = np.array((lat, lng,0,0,0,0,0,0,0,0,0,0,0,0,apt,bnb,cnd,hse,lft,oth,twn)).reshape(1,-1)
+    # Setting values for inputs, default to mean values
+    days_since_created = 0.0  # Setting to 0.0
+    number_of_photos = 16.1393133202  # Assuming average number of photos
+    instantbook_enabled = 0.0 # Assuming no instabook to start
+
+    superhost = 0.0  # Assuming no superhost to start
+    overall_rating = 0.0 # Assuming no reviews to start
+    number_of_reviews = 0.0 # Assuming no reviews to start
+    pike_market = 0.0  # Assuming not in pike-place
+    nonroom = 0.0  # Assuming an actual room
+    private_bath = 0.100125831386  # Initializing to mean value, will be user defined
+    view = 0.0648930433219   # Initializing to mean value, will be user defined
+    water = 0.00970699262988  # Initializing to mean value, will be user defined
+    parking = 0.00988675175265   # Initializing to mean value, will be user defined
+
+    # initialing all property types to 0.0, will be user defined
+    apt = 1.0
+    bnb = 0.0
+    cnd = 0.0
+    hse = 0.0
+    lft = 0.0
+    oth = 0.0
+    twn = 0.0
+
+    view_user = user_data['view']
+    bath_user = user_data['bath']
+
+    print "view_user = ", view_user
+    print "bath_user = ", bath_user
+    #prop_type_user = user_data['prop_type']
+
+    if view_user=='yes':
+        print "====== We have a view!!!"
+        view=1.0
+    else:
+        view=0.0
+    if bath_user=='yes':
+        print "====== We have a private bath!!!"
+        private_bath=1.0
+    else:
+        private_bath=0.0
+
+    # input_data_base = np.array((latitude, longitude ,0,0,0,0,0,0,0,0,0,0,0,0,apt,bnb,cnd,hse,lft,oth,twn)).reshape(1,-1)
+
+    input_data_base = np.array((days_since_created, number_of_photos, instantbook_enabled,
+                                latitude, longitude,
+                                superhost, overall_rating, number_of_reviews,
+                                pike_market, nonroom, private_bath, view, water, parking,
+                                0,0,0,0,0,0,0,0,0,0,0,0,
+                                apt,bnb,cnd,hse,lft,oth,twn)).reshape(1,-1)
 
     # Adding month flag for each iteration
+    print "Assigning months..."
+    #print input_data_base
     input_data_list=[]
+    print input_data_base.shape
     for i in range(12):
         month_input_data = np.copy(input_data_base)
-        month_input_data[:,i+2]=1
+        month_input_data[:,i+14]=1
         input_data_list.append(month_input_data)
 
     pred_list_int=[]
 
+    print "Getting predictions..."
     for input_data in input_data_list:
         pred = int(model.predict(input_data)[0])
         pred_list_int.append(int(pred))

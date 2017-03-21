@@ -50,6 +50,11 @@
       fill: white;
       font: 10px sans-serif;
     }
+    select#dropdown{
+    max-width: 100px;
+    min-width: 100px;
+    width: 100px !important;
+    }
   </style>
 
   <meta charset="utf-8">
@@ -120,14 +125,50 @@
             </td>
           </tr>
         </table>
+        <table>
+          <tr>
+            <td>
+              <form>
+                <label for="prop_id">Property Type:</label><br>
+                <select class="dropdown" id="prop_type" style="min-width:100">
+                  <option value="apt">Apartment</option>
+                  <option value="lft">Loft</option>
+                  <option value="cnd">Condo</option>
+                  <option value="twn">Townhouse</option>
+                  <option value="hse">House</option>
+                </select>
+                <br><br>
+              </form>
+            </td>
+            <td>
+              <form>
+                <label for="priv_bath">Private Bath:</label><br>
+                <select class="dropdown" id="bath" style="min-width:100">
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+                <br><br>
+              </form>
+
+            </td>
+            <td>
+              <form>
+                <label for="view">Has a View:</label><br>
+                <select class="dropdown" id="view" style="min-width:100">
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+                <br><br>
+              </form>
+            </td>
+          </tr>
+        </table>
 
         <!-- Image placeholder
         <img id='monthly_inc' alt="Chart Placeholder" class="fitfull" src='../../static/monthly_income.png' hidden>
         <img class="fit center" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/ex_55.png'>
         <span style="font-size:30px;font-family:impact;color=#D8D8D8">$</span>
         -->
-
-        <br>
         <svg class="chart"></svg>
         <div id="predictions"></div>
 
@@ -197,47 +238,21 @@
   var chart = d3.select(".chart")
                 .attr("width",width);
 
-  // d3.csv("/static/pred.csv", function(data) {
-  //   data.forEach(function(d) {
-  //       d.prediction = +d.prediction;
-  //   });
-  //
-  //     x.domain([0,d3.max(data,function(d){return d.prediction;})])
-  //
-  //     chart.attr("height", barHeight*12);
-  //
-  //     var bar = chart.selectAll("g")
-  //                    .data(data)
-  //                    .enter().append("g")
-  //                 .attr("transform",function(d,i){return "translate(0,"+i*barHeight+")"});
-  //
-  //     rect = bar.append("rect")
-  //       .attr("width","1").attr("height",barHeight-1).attr("padding","5");
-  //
-  //     rect.transition()
-  //       .attr("width",function(d){return x(d.prediction);}).duration(1000);
-  //
-  //     bar.append("text")
-  //       //.attr("x",function(d){return x(d.prediction)+5})
-  //       .attr("x",5)
-  //       .attr("y",barHeight/2)
-  //       .attr("dy",".35em").text(function(d){return d.month});
-  //
-  //     bar.append("text")
-  //       .attr("x",function(d){return x(d.prediction)-5})
-  //       .attr("y",barHeight/2)
-  //       .attr("dy",".35em").text(function(d){return d.prediction})
-  //       .style("text-anchor","end");
-  //
-  // });
-
   let get_input_latlng = function() {
         let lat = $("input#lat").val()
         let lng = $("input#lng").val()
+        let prop_type = $("select#prop_type").val()
+        let bath = $("select#bath").val()
+        let view = $("select#view").val()
+
         return {'lat': parseFloat(lat),
-                'lng': parseFloat(lng)
+                'lng': parseFloat(lng),
+                'prop_type': prop_type,
+                'bath': bath,
+                'view': view,
                }
   };
+
 
   let make_prediction = function(latlng) {
         $.ajax({
@@ -250,7 +265,7 @@
                 //$("img#monthly_inc").toggle();
                 //$("span#predict").html(data)
 
-                x.domain([0,d3.max(data,function(d){return d.prediction;})])
+                x.domain([0,120])
                 $(".chart").empty()
                 chart.attr("height", barHeight*data.length);
 
@@ -263,7 +278,7 @@
                   .attr("width","1").attr("height",barHeight-1).attr("padding","5");
 
                 rect.transition()
-                  .attr("width",function(d){return x(d.prediction);}).duration(1000);
+                  .attr("width",function(d){return x(d.prediction);}).duration(10);
 
                 bar.append("text")
                   //.attr("x",function(d){return x(d.prediction)+5})
@@ -288,6 +303,12 @@
   $(document).ready(function() {
 
         $("button#predict").click(function() {
+
+            make_prediction(get_input_latlng());
+
+        });
+
+        $("select.dropdown").change(function() {
 
             make_prediction(get_input_latlng());
 
