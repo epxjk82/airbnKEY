@@ -138,10 +138,10 @@ def plot_boxplot_compare(df, by, column1, column2, rot=0, fontsize=8, figsize=(1
     sorted_groups = df.groupby(by).mean()[column1].sort_values(ascending=False).index
 
     capprops1 = dict(linestyle='')
-    whiskerprops1 = dict(linestyle='')
+    whiskerprops1 = dict(linestyle='-')
     medianprops1 = dict(linestyle='--', linewidth=2., color='black')
     meanprops1 = dict(linestyle='-', linewidth=2., color='black')
-    boxprops1 = dict(linestyle='')
+    boxprops1 = dict(linestyle='-')
     data1 = [df[df[by]==group][column1] for group in sorted_groups ]
     box1 = ax.boxplot(data1, labels=sorted_groups, widths=0.4, showmeans=True, meanline=True,
                       boxprops=boxprops1, meanprops=meanprops1, medianprops=medianprops1, capprops=capprops1, whiskerprops=whiskerprops1);

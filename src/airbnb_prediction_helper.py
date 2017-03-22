@@ -99,6 +99,8 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearc
     for i in range(num_bootstrap):
         if i%100==0:
             print "Running iteration {} ...".format(i)
+            if i!=0:
+                print "Mean of mse_scores = ", sum(mse_scores)/len(mse_scores)
         # Getting bootstrap indices for train
         boot_sample_range = np.array(range(0, len(X.index)))
         boot_sample_idx = np.random.choice(boot_sample_range, len(X.index), replace=True)
@@ -309,8 +311,8 @@ def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=5,N_ESTIMATORS = 2
     plt.plot(np.arange(N_ESTIMATORS) + 1, mean_train_score, color='red', linewidth=2,
              label='Average Training Fold Error')
 
-    plt.annotate('Optimal Cross Validation Error', optimal_point,
-                  xytext=(optimal_point[0] - 1000, optimal_point[1] + 100),
+    plt.annotate('Optimal CV Error', optimal_point,
+                  xytext=(optimal_point[0] - 600, optimal_point[1] + 100),
                   arrowprops=dict(facecolor="darkgrey", shrink=0.05),
                   fontsize=14,
                   alpha=0.75
@@ -318,8 +320,10 @@ def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=5,N_ESTIMATORS = 2
     plt.title("Cross Validation Training and Testing Scores ({}) folds)".format(N_FOLDS))
     plt.xlabel('Number of Boosting Stages', fontsize=14)
     plt.ylabel('Average Squared Error', fontsize=14)
+    #plt.yaxis.grid(True, linestyle='dotted', linewidth='0.5', color='gray')
+
     plt.legend(loc="upper right")
-    print optimal_point
+    print "Optimal point: {} trees, MSE {}".format(optimal_point[0], optimal_point[1])
 
 
 def get_loftium_train_test_split(df):
