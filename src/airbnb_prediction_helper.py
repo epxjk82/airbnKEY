@@ -328,7 +328,7 @@ def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=5,N_ESTIMATORS = 2
 
 def get_loftium_train_test_split(df):
     insample_prop_ids = []
-    with open('../data/Loftium/insample_prop_ids.txt') as infile:
+    with open('data/Loftium/insample_prop_ids.txt') as infile:
         for line in infile:
             insample_prop_ids.append(int(line.strip()))
 
