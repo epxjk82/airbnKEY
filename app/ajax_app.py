@@ -47,8 +47,8 @@ def predict():
     days_since_created = 0.0  # Setting to 0.0
     instantbook_enabled = 0.0 # Assuming no instabook to start
     superhost = 0.0  # Assuming no superhost to start
-    overall_rating = user_data['rating']
-    number_of_reviews = user_data['reviews'] 
+    overall_rating = 4.7  # user_data['rating']
+    number_of_reviews = 0 # user_data['reviews']
     private_bath = 0.0  # Initializing to mean value, will be user defined
     view = 0.0   # Initializing to mean value, will be user defined
 
