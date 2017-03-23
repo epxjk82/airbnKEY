@@ -55,6 +55,61 @@
     min-width: 100px;
     width: 100px !important;
     }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 35px;
+      height: 20px;
+    }
+
+    .switch input {display:none;}
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked + .slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(15px);
+      transform: translateX(15px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
   </style>
 
   <meta charset="utf-8">
@@ -86,9 +141,9 @@
         <!-- <img class="fitfull" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/left_rooms.png'> -->
         <img src='static/left_rooms.jpg'>
       </td>
-      <td valign="top" align="left" width="500">
+      <td valign="top" align="left" width="450">
         <h2>Home Affordability with Airbnb</h2>
-        <p>Home affordability has become a major challenge in the Greater Seattle Area (47.6062° N, 122.3321° W).
+        <p>Home affordability has become a major challenge in the Greater Seattle Area.
           Fortunately, homeowners now have the option to Airbnb rooms in their new
           homes to help pay for the mortgage. </p>
 
@@ -101,21 +156,21 @@
         <div id="map" style="width:500px;height:250px;background:yellow"></div>
       </td>
 
-      <td valign="top" align="left" width=400>
+      <td valign="top" align="left" width=450>
 
-        <h2>Prediction</h2>
-        <table>
+        <h2>What's your room worth?</h2>
+        <table width="425">
           <tr>
             <td style="padding: 2px">
               <div class="form-group">
                 <label for="lat">Latitude:</label>
-                <input class="form-control" width="150" type="text" id="lat" style="font-size : 16px"  value='47.6062'></input>
+                <input class="form-control" width="150" type="text" id="lat" style="font-size : 16px"  value='47.60'></input>
               </div>
             </td>
             <td style="padding: 2px">
               <div class="form-group">
                 <label for="lng">Longitude:</label>
-                <input class="form-control" width="150" type="text" id="lng" style="font-size : 16px" value='-122.3321'></input>
+                <input class="form-control" width="150" type="text" id="lng" style="font-size : 16px" value='-122.30'></input>
               </div>
             </td>
             <td  style="padding: 2px" valign="bottom">
@@ -125,11 +180,12 @@
             </td>
           </tr>
         </table>
-        <table>
+        <table width="425">
           <tr>
-            <td>
+            <td valign="top">
               <form>
-                <label for="prop_id">Property Type:</label><br>
+                <!-- <label for="prop_type">Property:</label><br> -->
+                Property: <br>
                 <select class="dropdown" id="prop_type" style="min-width:100">
                   <option value="apt">Apartment</option>
                   <option value="lft">Loft</option>
@@ -137,30 +193,44 @@
                   <option value="twn">Townhouse</option>
                   <option value="hse">House</option>
                 </select>
-                <br><br>
               </form>
             </td>
             <td>
-              <form>
-                <label for="priv_bath">Private Bath:</label><br>
-                <select class="dropdown" id="bath" style="min-width:100">
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
-                <br><br>
-              </form>
-
+              Priv Bath: </br>
+              <label class="switch">
+                <input class="switch" id="bath" type="checkbox">
+                <div class="slider round"></div>
+              </label>
             </td>
             <td>
-              <form>
-                <label for="view">Has a View:</label><br>
-                <select class="dropdown" id="view" style="min-width:100">
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
-                <br><br>
-              </form>
+              View: </br>
+              <label class="switch">
+                <input class="switch" id="view" type="checkbox">
+                <div class="slider round"></div>
+              </label>
             </td>
+            <td>
+              Instabook: </br>
+              <label class="switch">
+                <input class="switch" id="instabook" type="checkbox">
+                <div class="slider round"></div>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td colspan=4>
+              Rating: <strong id="rating_val"></strong>
+              <input type="range" id="rating" value="0" max="5" step="0.2">
+            </td>
+          </tr>
+          <tr>
+            <td colspan=4>
+              Reviews: <strong id="reviews_val"></strong>
+              <input type="range" id="reviews" value="0" max="200" step="20">
+          </tr>
+          <tr>
+            <td colspan=4>
+              <svg class="chart"></svg>
           </tr>
         </table>
 
@@ -169,7 +239,7 @@
         <img class="fit center" src='https://s3-us-west-2.amazonaws.com/airbnbpredictors3/ex_55.png'>
         <span style="font-size:30px;font-family:impact;color=#D8D8D8">$</span>
         -->
-        <svg class="chart"></svg>
+
         <div id="predictions"></div>
 
     </tr>
@@ -225,34 +295,110 @@
   </script>
 
   <script>
-  // Set the dimensions of the canvas / graph
-  var margin = {top: 20, right: 20, bottom: 70, left: 40},
-      width = 400 - margin.left - margin.right,
-      height = 300 - margin.top - margin.bottom;
-      barHeight= 20;
-
-  // Set the ranges
-  var x = d3.scale.linear()
-            .range([0,width]);
-
-  var chart = d3.select(".chart")
-                .attr("width",width);
 
   let get_input_latlng = function() {
         let lat = $("input#lat").val()
         let lng = $("input#lng").val()
         let prop_type = $("select#prop_type").val()
-        let bath = $("select#bath").val()
-        let view = $("select#view").val()
+        let bath = $("input#bath").is(":checked")
+        let view = $("input#view").is(":checked")
+        let instabook = $("input#instabook").is(":checked")
+        let reviews = $("input#reviews").val()
+        let rating = $("input#rating").val()
+        // let bath = $("select#bath").val()
+        // let view = $("select#view").val()
+        // let instabook = $("select#instabook").val()
+        // let prop_type = $("select#prop_type").val()
 
         return {'lat': parseFloat(lat),
                 'lng': parseFloat(lng),
                 'prop_type': prop_type,
                 'bath': bath,
                 'view': view,
+                'instabook': instabook,
+                'prop_type': prop_type,
+                'reviews': parseFloat(reviews),
+                'rating': parseFloat(rating),
                }
   };
 
+  // Set the dimensions of the canvas / graph
+  var margin = {top: 20, right: 20, bottom: 70, left: 40},
+      width = 450 - margin.left - margin.right,
+      height = 300 - margin.top - margin.bottom,
+      barHeight= 20;
+
+  // Set the ranges
+  var x = d3.scale.linear()
+            .range([0,width]);
+
+  x.domain([0,120])
+
+  var chart = d3.select(".chart")
+                .attr("width",width)
+                .attr("height", barHeight*12);
+
+  // Getting default data stored in csv
+  function showDefault() {
+      d3.csv("static/pred.csv", type, updateChart);
+  }
+
+  function updateNew(data) {
+      d3.json(data, updateChart);
+  }
+
+  showDefault();
+
+  function type(d) {
+      d.prediction = +d.prediction;
+      return d;
+  }
+
+  function updateChart(data) {
+      // y.domain([0, d3.max(data, function(d) { return d.value; })]);
+      // y-axis
+      // chart.select(".y.axis").remove();
+      // chart.append("g")
+      //       .attr("class", "y axis")
+      //       .call(yAxis)
+      //   .append("text")
+      //     .attr("transform", "rotate(-90)")
+      //     .attr("y", 6)
+      //     .attr("dy", ".71em")
+      //     .style("text-anchor", "end")
+      //     .text("Frequency");
+
+      var bar = chart.selectAll("g")
+                     .data(data)
+                     .enter()
+                     .append("g")
+                     .attr("transform",function(d,i){
+                       return "translate(0,"+i*barHeight+")"
+                     });
+
+      rect = bar.append("rect")
+        // .attr("width","1")
+        .attr("height",barHeight-1).attr("padding","5")
+        .attr("class", function(d){return d.month} );
+
+      bar.append("text")
+        //.attr("x",function(d){return x(d.prediction)+5})
+        .attr("x",5)
+        .attr("y",barHeight/2)
+        .attr("dy",".35em").text(function(d){return d.month});
+
+      bar.append("text")
+        .attr("x",function(d){return x(d.prediction)-5})
+        .attr("y",barHeight/2)
+        .attr("dy",".35em").text(function(d){return d.prediction})
+        .style("text-anchor","end");
+
+      rect.transition()
+        .attr("width",function(d){return x(d.prediction);})
+        .duration(750);
+
+
+  };
 
   let make_prediction = function(latlng) {
         $.ajax({
@@ -265,37 +411,38 @@
                 //$("img#monthly_inc").toggle();
                 //$("span#predict").html(data)
 
-                x.domain([0,120])
+                // updateNew(data);
+                // d3.selectAll('rect').transition()
+                //   .attr("width",function(d){return x(d.prediction);})
+                //   .duration(1000)
+
                 $(".chart").empty()
-                chart.attr("height", barHeight*data.length);
+                x.domain([0,120])
 
                 var bar = chart.selectAll("g")
                                .data(data)
                                .enter().append("g")
-                            .attr("transform",function(d,i){return "translate(0,"+i*barHeight+")"});
+                               .attr("transform",function(d,i){return "translate(0,"+i*barHeight+")"});
 
                 rect = bar.append("rect")
-                  .attr("width","1").attr("height",barHeight-1).attr("padding","5");
+                          .attr("width","1").attr("height",barHeight-1).attr("padding","5");
 
                 rect.transition()
-                  .attr("width",function(d){return x(d.prediction);}).duration(10);
+                    .attr("width",function(d){return x(d.prediction);}).duration(0);
 
                 bar.append("text")
-                  //.attr("x",function(d){return x(d.prediction)+5})
-                  .attr("x",5)
-                  .attr("y",barHeight/2)
-                  .attr("dy",".35em").text(function(d){return d.month});
+                   //.attr("x",function(d){return x(d.prediction)+5})
+                   .attr("x",5)
+                   .attr("y",barHeight/2)
+                   .attr("dy",".35em").text(function(d){return d.month});
 
                 bar.append("text")
-                  .attr("x",function(d){return x(d.prediction)-5})
-                  .attr("y",barHeight/2)
-                  .attr("dy",".35em").text(function(d){return d.prediction})
-                  .style("text-anchor","end");
+                   .attr("x",function(d){return x(d.prediction)-5})
+                   .attr("y",barHeight/2)
+                   .attr("dy",".35em").text(function(d){return d.prediction})
+                   .style("text-anchor","end");
 
-                function type(d){
-                  data.prediction = +data.prediction;//coerce to number
-                  return d;
-                }
+
             }
         });
   };
@@ -314,7 +461,21 @@
 
         });
 
-  });
+        $("input.switch").click(function() {
+
+            make_prediction(get_input_latlng());
+
+        });
+
+        $("input#reviews").click(function() {
+            make_prediction(get_input_latlng());
+            document.getElementById("reviews_val").innerHTML = document.getElementById("reviews").value;
+        });
+
+        $("input#rating").click(function() {
+            make_prediction(get_input_latlng());
+            document.getElementById("rating_val").innerHTML = document.getElementById("rating").value;
+        });  });
 
  </script>
 </body>
