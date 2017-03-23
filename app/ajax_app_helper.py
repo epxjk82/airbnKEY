@@ -5,6 +5,13 @@ import matplotlib.pyplot as plt
 import datetime
 
 def save_bar_chart_figure(data, x_labels):
+    """ Saves bar chart as png file
+
+    INPUT:
+    data: list of input data for bar chart
+    RETURNS:
+    outpath: str for png filepath
+    """
     # Plot bar chart and save figure to file
     # --------------------------------------
     # Saving plot to file
@@ -16,7 +23,7 @@ def save_bar_chart_figure(data, x_labels):
 
     # Set plotting parameters
     plt.figure(figsize=(6, 4))
-    ax = pred_series.plot(kind='bar', rot=0, grid=None, fontsize=10, color="#FFA500", width=0.8, alpha=0.7)
+    ax = pred_series.plot(kind='bar', rot=0, grid=None, fontsize=10, color="#0099DF", width=0.8, alpha=0.5)
     ax.set_xticklabels(x_labels,**cgfont)
     ax.set_facecolor('white')
 
