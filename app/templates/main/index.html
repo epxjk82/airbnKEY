@@ -217,17 +217,17 @@
               </label>
             </td>
           </tr>
-          <tr>
-            <td colspan=4>
+          <!-- <tr>
+            <td colspan=2>
               Rating: <strong id="rating_val"></strong>
-              <input type="range" id="rating" value="0" max="5" step="0.2">
+              <input type="range" id="rating" value="4.7" min="3.8" max="5" step="0.1">
             </td>
-          </tr>
-          <tr>
-            <td colspan=4>
+          </tr> -->
+          <!-- <tr>
+            <td colspan=2>
               Reviews: <strong id="reviews_val"></strong>
               <input type="range" id="reviews" value="0" max="200" step="20">
-          </tr>
+          </tr> -->
           <tr>
             <td colspan=4>
               <svg class="chart"></svg>
@@ -303,8 +303,8 @@
         let bath = $("input#bath").is(":checked")
         let view = $("input#view").is(":checked")
         let instabook = $("input#instabook").is(":checked")
-        let reviews = $("input#reviews").val()
-        let rating = $("input#rating").val()
+        // let reviews = $("input#reviews").val()
+        // let rating = $("input#rating").val()
         // let bath = $("select#bath").val()
         // let view = $("select#view").val()
         // let instabook = $("select#instabook").val()
@@ -317,8 +317,8 @@
                 'view': view,
                 'instabook': instabook,
                 'prop_type': prop_type,
-                'reviews': parseFloat(reviews),
-                'rating': parseFloat(rating),
+                // 'reviews': parseFloat(reviews),
+                // 'rating': parseFloat(rating),
                }
   };
 
@@ -340,6 +340,7 @@
 
   // Getting default data stored in csv
   function showDefault() {
+      // document.getElementById("rating_val").innerHTML = document.getElementById("rating").value;
       d3.csv("static/pred.csv", type, updateChart);
   }
 
@@ -377,7 +378,7 @@
                      });
 
       rect = bar.append("rect")
-        // .attr("width","1")
+        .attr("width","1")
         .attr("height",barHeight-1).attr("padding","5")
         .attr("class", function(d){return d.month} );
 
@@ -467,15 +468,16 @@
 
         });
 
-        $("input#reviews").click(function() {
-            make_prediction(get_input_latlng());
-            document.getElementById("reviews_val").innerHTML = document.getElementById("reviews").value;
-        });
-
-        $("input#rating").click(function() {
-            make_prediction(get_input_latlng());
-            document.getElementById("rating_val").innerHTML = document.getElementById("rating").value;
-        });  });
+        // $("input#reviews").click(function() {
+        //     make_prediction(get_input_latlng());
+        //     document.getElementById("reviews_val").innerHTML = document.getElementById("reviews").value;
+        // });
+        //
+        // $("input#rating").click(function() {
+        //     make_prediction(get_input_latlng());
+        //     document.getElementById("rating_val").innerHTML = document.getElementById("rating").value;
+        // });
+  });
 
  </script>
 </body>
