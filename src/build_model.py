@@ -1,17 +1,10 @@
 """
 Module containing model fitting code for a web application that implements a
-text classification model.
+predictive model for Airbnb EDR.
 
-When run as a module, this will load a csv dataset, train a classification
-model, and then pickle the resulting model object to disk.
-
-USE:
-
-python build_model.py --data path_to_input_data --out path_to_save_pickled_model
-python build_model.py --data data/articles.csv --out static/model.pkl
+python build_model.py
 """
 #import statsmodels.api as sm
-#from scipy.misc import imread
 #import gmplot
 #import seaborn as sns
 
@@ -19,6 +12,8 @@ import argparse
 import cPickle as pickle
 import pandas as pd
 import numpy as np
+import datetime
+# NLP modules - to be incorporated later
 # from sklearn.feature_extraction.text import TfidfVectorizer
 # from sklearn.naive_bayes import MultinomialNB
 
@@ -29,77 +24,7 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, A
 
 import airbnb_EDA_helper as eda
 import airbnb_prediction_helper as pred
-
-class Airbnb_EDR_Model(object):
-
-    def __init__(self, estimator):
-        self.estimator = estimator
-        self.X_train = None
-        self.y_train = None
-        self.cv_score_ = None
-        self.test_mse_ = None
-
-
-    def fit(self, X_train, y_train):
-        self.X_train=X_train
-        self.y_train=y_train
-        self.estimator.fit(X_train, y_train)
-        return self.estimator
-
-    def cv_mse(self,cv=5):
-        self.cv_mse_ = np.mean(cross_val_score(self.estimator, self.X_train, self.y_train,
-                                                 cv=cv, scoring='neg_mean_squared_error'))
-        return -self.cv_mse_
-
-    def predict(self,X):
-        return self.estimator.predict(X)
-
-    def test_mse(self,X,y):
-        y_pred = self.predict(X)
-        self.test_mse_ = mean_squared_error(y_pred, y)
-        return self.test_mse_
-
-def get_dummy_dfs(df, dummy_list):
-    """Append dummy columns to dataframe
-
-    Parameters
-    ----------
-    df : pandas DataFrame
-        Complete dataset to be used for model training
-    dummy_list : list
-        List of column names to be converted to dummy columns
-
-    Returns
-    -------
-    dummy_list : list
-        A list of pandas DataFrames of dummy columns
-    """
-
-    dummy_dfs=[]
-    for dummy in dummy_list:
-        dummy_dfs.append(pd.get_dummies(df[dummy]))
-    return dummy_dfs
-
-def prep_model_df(df, features, dummys):
-    """Append dummy columns to dataframe
-
-    Parameters
-    ----------
-    df : pandas DataFrame
-        Complete dataset to be used for model training
-    dummy_list : list
-        List of pandas dfs of dummy coded columns
-
-    Returns
-    -------
-    model_df : pandas DataFrame
-        An expanded pandas DataFrame with appended dummy columns
-    """
-    model_df = df[features]
-    for dummy in dummys:
-        model_df = pd.concat([model_df,dummy],axis=1)
-    return model_df
-
+from airbnKEY_model import AirbnKEY_Model, get_dummy_dfs, prep_model_df
 
 def prep_annual_data_for_model(excel_file):
     """Clean and prepare imported data (annual) for modeling
@@ -150,15 +75,127 @@ def prep_annual_data_for_model(excel_file):
 
     return listing_data_df
 
+def prep_monthly_data_for_model(excel_file, listing_data_df):
+    """Clean and prepare imported data (monthly) for modeling
+
+    Parameters
+    ----------
+    excel_file : str
+        Path to excel file with data
+    listing_data_df: pandas DataFrame
+        Processed pandas Dataframe from function prep_annual_data_for_model()
+
+    Returns
+    -------
+    listing_data_df : pandas DataFrame
+        A pandas DataFrame with cleaned data
+    """
+
+    # Read in monthly data from excel file
+    monthly_data_df = pd.read_excel(excel_file, sheetname='Monthly')
+    monthly_data_df.columns = monthly_data_df.columns.str.replace(' ','_')
+
+    # Filter monthly data to properties that are common with listing_data_df (annual data)
+    prop_ids_to_keep = listing_data_df.Property_ID.unique()
+    monthly_data_df = monthly_data_df[monthly_data_df.Property_ID.isin(prop_ids_to_keep)]
+
+    # Cleaning up data, adding key features
+    monthly_data_df['Property_Type'].replace('Bed &amp; Breakfast', 'Bed & Breakfast', inplace=True)
+    monthly_data_df['Month'] = monthly_data_df.Reporting_Month.apply(lambda x: x.month)
+
+    # Adding target column
+    monthly_data_df['EDR'] = monthly_data_df.Occupancy_Rate * monthly_data_df.ADR
+
+    # Only keeping months with more than 10 reservation days
+    monthly_data_df = monthly_data_df[monthly_data_df.Reservation_Days>10]
+
+    # Removing outlier property with minimal data and low review rating
+    monthly_data_df = monthly_data_df[monthly_data_df.Property_ID!=7093910]
+
+    return monthly_data_df
+
 if __name__ == '__main__':
 
+    # DATA LOAD AND PREPARATION
+    # ==========================================================================
+    print "Loading and preparing data ..."
     listing_data_df = prep_annual_data_for_model('../data/Loftium/Back testing - Copy.xlsx')
-    # Feature engineering
-    listing_gdbr_cols_keep = [
-        # ==== LISTING DETAILS ==========
+    monthly_data_df = prep_monthly_data_for_model('../data/Loftium/Back testing - Copy.xlsx', listing_data_df)
+
+    # IMPORTANT: -------
+    # The monthly data set contains only a subset of the feature space from the annual data.
+    # To get access to full feature space at the monthly granularity, need to append features
+    # from annual data to the monthly data.
+    #   Step 1: Identify features from annual data to join with monthly data
+    #   Step 2: Perform an inner join between the annual and monthly data on Property_ID
+
+    # Step 1:  Identify features from annual data to join with monthly data
+    listing_gdbr_cols_keep_merge = [
+        'Property_ID',   # Need to add this for joining
+        'Annual_Revenue_LTM',
+        'Average_Daily_Rate',
+        'Bathrooms',
+        'Calendar_Last_Updated',
+        'Cancellation_Policy',
+        'Checkin_Time',
+        'Checkout_Time',
+        'Cleaning_Fee',
+        'Count_Available_Days_LTM',
+        'Count_Blocked_Days_LTM',
+        'Count_Reservation_Days_LTM',
+        'Created_Date',
+        'Days_Since_Created',
+        'Extra_People_Fee',
+        'Instantbook_Enabled',
+        'Last_Scraped_Date',
+        'Listing_Main_Image_URL',
+        'Listing_Title',
+        'Listing_URL',
+        'Max_Guests',
+        'Minimum_Stay',
+        'Number_of_Bookings_LTM',
+        'Number_of_Photos',
+        'Number_of_Reviews',
+        'Occupancy_Calculated',
+        'Occupancy_Rate_LTM',
+        'Overall_Rating',
+        'Pike_Market',
+        'Published_Monthly_Rate',
+        'Published_Nightly_Rate',
+        'Published_Weekly_Rate',
+        'Response_Rate',
+        'Response_Time_min',
+        'Security_Deposit',
+        'Superhost',
+        'Zipcode',
+        'nonroom',
+        'parking',
+        'private_bath',
+        'view',
+        'walk',
+        'water',
+    ]
+
+    # Step 2: Perform an inner join between the annual and monthly data on Property_ID
+    print "Joining monthly and annual datasets ..."
+    merge_df = pd.merge(monthly_data_df,
+                        listing_data_df[listing_gdbr_cols_keep_merge],
+                        left_on='Property_ID',  right_on='Property_ID',
+                        how='inner')
+
+    # FEATURE ENGINEERING
+    # ==========================================================================
+    # Now that we have access to the the full feature space at the monthly granularity,
+    # down-select to features to use in predictive model.
+    #
+    # The goal is to only keep features that will have meaningful contributions to predictive accuracy.
+
+    # Select continuous features to be used in model training
+    merge_gdbr1_cols_keep = [
+        # ==== LISTING DETAILS ==========a
         #'Bathrooms', 'Bedrooms',
-        'Days_Since_Created', 'Number_of_Photos','Instantbook_Enabled',
-        'Max_Guests', 'Minimum_Stay',
+        'Days_Since_Created', 'Instantbook_Enabled',
+        #'Max_Guests', 'Minimum_Stay', 'Number_of_Photos',
         # ---- Exclude
         #'Property_ID', 'Listing_Title', 'Listing_Main_Image_URL','Listing_URL','Created_Date',
         #'Check-in_Time', 'Checkout_Time',
@@ -179,7 +216,7 @@ if __name__ == '__main__':
         #'Published_Monthly_Rate','Published_Nightly_Rate', 'Published_Weekly_Rate',
 
         # ==== ADDITIONAL FEES =========
-        'Security_Deposit', 'Extra_People_Fee', 'Cleaning_Fee',
+        #'Security_Deposit', 'Extra_People_Fee', 'Cleaning_Fee',
 
         # ==== HOST QUALITY ============
         'Superhost', 'Overall_Rating','Number_of_Reviews',
@@ -187,18 +224,91 @@ if __name__ == '__main__':
         #'Response_Rate', 'Response_Time_min',
 
         # ==== SPECIAL FEATURES ========
-        'Pike_Market', 'nonroom', 'private_bath', 'view', 'water','parking',
+        'private_bath', 'view',
         # ---- Exclude
+        #'Pike_Market', 'nonroom',
+        #'water','parking',
         #'walk',
-        ]
+    ]
+
+    # Select categoriccal featues to be converted into dummy columns
+    merge_gdbr1_cols_dummy =[
+        #'Neighborhood',   # Removing since location information captured by lat-long
+        #'Zipcode',        # Zipcode is from annual dataset
+        #'Zip_code',       # Zip_code is from monthly dataset
+        'Month',
+        'Property_Type',
+    ]
+
+    print "Reducing feature space ..."
+    # Reduce feature space and add columns with dummy coding as specified above
+    merge_gdbr1_dummy_dfs = get_dummy_dfs(merge_df, merge_gdbr1_cols_dummy)
+    X = prep_model_df(merge_df, merge_gdbr1_cols_keep, merge_gdbr1_dummy_dfs)
+
+    # Specify the target variable
+    #   EDR = Expected Daily Rate for a given month
+    y = X.pop('EDR')
+
+    # Performing train-test split
+    X_train, X_test, y_train, y_test = train_test_split(X,y)
+
+    # Setting the model
+    model = AirbnKEY_Model(GradientBoostingRegressor(learning_rate=0.05, n_estimators=2500),
+                               conf_interval=0.90)
+    print "Training model ..."
+    # Fitting the model
+    model.fit(X_train, y_train)
+
+    # =========================================================================
+    # ANNUAL model
+    # This section is for model creation at an annual granularity.
+    # Currently not being used, since seasonality is not captured at annual level.
+    # =========================================================================
+    # listing_gdbr_cols_keep = [
+    #     # ==== LISTING DETAILS ==========
+    #     #'Bathrooms', 'Bedrooms',
+    #     'Days_Since_Created', 'Number_of_Photos','Instantbook_Enabled',
+    #     'Max_Guests', 'Minimum_Stay',
+    #     # ---- Exclude
+    #     #'Property_ID', 'Listing_Title', 'Listing_Main_Image_URL','Listing_URL','Created_Date',
+    #     #'Check-in_Time', 'Checkout_Time',
+    #
+    #     # ==== BOOKING HISTORY =========
+    #     'EDR',
+    #     # ---- Exclude
+    #     #'Occupancy_Calculated', 'Annual_Revenue_LTM', 'Average_Daily_Rate' 'Last_Scraped_Date','Calendar_Last_Updated',
+    #     #'Number_of_Bookings_LTM','Count_Blocked_Days_LTM', 'Count_Reservation_Days_LTM','Count_Available_Days_LTM',
+    #
+    #     # ==== LOCATION ================
+    #     'Latitude', 'Longitude',
+    #     # ---- Exclude
+    #     #'Country', 'State','City', 'Metropolitan_Statistical_Area',
+    #
+    #     # ==== EXTENDED STAY DETAILS ===
+    #     # --- -Exclude
+    #     #'Published_Monthly_Rate','Published_Nightly_Rate', 'Published_Weekly_Rate',
+    #
+    #     # ==== ADDITIONAL FEES =========
+    #     'Security_Deposit', 'Extra_People_Fee', 'Cleaning_Fee',
+    #
+    #     # ==== HOST QUALITY ============
+    #     'Superhost', 'Overall_Rating','Number_of_Reviews',
+    #     # ---- Exclude
+    #     #'Response_Rate', 'Response_Time_min',
+    #
+    #     # ==== SPECIAL FEATURES ========
+    #     'Pike_Market', 'nonroom', 'private_bath', 'view', 'water','parking',
+    #     # ---- Exclude
+    #     #'walk',
+    #     ]
 
     # Features to dummy
-    listing_gdbr_cols_dummy = [
-        #'Neighborhood',
-        #'Zipcode',
-        'Cancellation_Policy',
-        'Property_Type'
-        ]
+    # listing_gdbr_cols_dummy = [
+    #     #'Neighborhood',
+    #     #'Zipcode',
+    #     'Cancellation_Policy',
+    #     'Property_Type'
+    #     ]
 
     # From gridsearch, following hyperparameters:
     # {'learning_rate': 0.01,
@@ -208,34 +318,33 @@ if __name__ == '__main__':
     # 'n_estimators': 1000}
 
     # Defining the best model
-    best_model = GradientBoostingRegressor(  alpha=0.9, criterion='friedman_mse', init=None,
-                                             learning_rate=0.01, loss='ls', max_depth=5,
-                                             max_features='sqrt', max_leaf_nodes=None,
-                                             min_impurity_split=1e-07, min_samples_leaf=2,
-                                             min_samples_split=2, min_weight_fraction_leaf=0.0,
-                                             n_estimators=1000, presort='auto', random_state=None,
-                                             subsample=1.0, verbose=0, warm_start=False)
+    # best_model = GradientBoostingRegressor(  alpha=0.9, criterion='friedman_mse', init=None,
+    #                                          learning_rate=0.01, loss='ls', max_depth=5,
+    #                                          max_features='sqrt', max_leaf_nodes=None,
+    #                                          min_impurity_split=1e-07, min_samples_leaf=2,
+    #                                          min_samples_split=2, min_weight_fraction_leaf=0.0,
+    #                                          n_estimators=1000, presort='auto', random_state=None,
+    #                                          subsample=1.0, verbose=0, warm_start=False)
+    # =========================================================================
+    # ANNUAL model - end
+    # =========================================================================
 
-    # Prepare pandas dataframe for modeling:
-    #   1) Create dataframes with dummy columns
-    #   2) Combine dummy columns with main dataframe
-    dummy_df_list = pred.get_dummy_dfs(listing_data_df,listing_gdbr_cols_dummy)
-    model_df = pred.prep_model_df(listing_data_df,listing_gdbr_cols_keep,dummy_df_list)
 
-    X = model_df.drop('EDR', axis=1)
-    y = model_df.EDR
+    # Saving trained model to a pickle object for use in flask application
+    # =========================================================================
+    datestring = '{:04d}{:02d}{:02d}{:02d}{:02d}'.format(datetime.date.today().year,
+                                                         datetime.date.today().month,
+                                                         datetime.date.today().day,
+                                                         datetime.datetime.today().hour,
+                                                         datetime.datetime.today().minute,)
 
-    model = best_model.fit(X, y)
-
-    datestring = '{:04d}{:02d}{:02d}'.format(datetime.date.today().year,
-                                         datetime.date.today().month,
-                                         datetime.date.today().day,
-                                         datetime.datetime.today().hour,
-                                         datetime.datetime.today().minute,)
-
-    filename ='../app/static/model_{}.pkl'.format(datestring)
+    filename ='../app/static/gdbr_model.pkl'
+    filename_backup ='../app/static/gdbr_model_{}.pkl'.format(datestring)
 
     print ("Saving model to {}".format(filename))
+
+    with open(filename_backup, 'w') as f:
+        pickle.dump(model, f)
 
     with open(filename, 'w') as f:
         pickle.dump(model, f)
