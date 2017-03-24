@@ -8,6 +8,20 @@ from sklearn.ensemble.partial_dependence import plot_partial_dependence, partial
 from sklearn.base import clone
 
 class AirbnKEY_Model(object):
+    """ Trains a predictive model
+
+    Methods
+    --------
+    fit(X_train, y_train) : Fit model
+    predict(X) : Predict values
+    cv_mse(kfolds) : Run k-fold cross-validation and return mean-squared error score
+    test_mse(X,y) : Return test mean-squared error score
+
+    Attributes
+    -----------
+    estimator : Specified model with pre-set parameters
+
+    """
 
     def __init__(self, estimator, conf_interval):
         self.estimator = estimator
@@ -19,21 +33,65 @@ class AirbnKEY_Model(object):
         self.cv_folds = None
 
     def fit(self, X_train, y_train):
+        ''' Train model
+
+        Parameters
+        -----------
+        X_train : pandas DatFrame for training data
+        y_train : pandas DatFrame for target
+
+        Returns
+        --------
+        estimator: fitted model
+        '''
+
         self.X_train=X_train
         self.y_train=y_train
         self.estimator.fit(X_train, y_train)
         return self.estimator
 
     def cv_mse(self,cv_folds=5):
+        ''' Calculate cross validation mean squared error
+
+        Parameters
+        -----------
+        kfolds : Number of k-folds to be run in cross validation
+
+        Returns
+        --------
+        self.cv_mse_: Mean squared error from cross validation
+        '''
         self.cv_folds = cv_folds
         self.cv_mse_ = np.mean(cross_val_score(self.estimator, self.X_train, self.y_train,
                                                cv=cv_folds, scoring='neg_mean_squared_error'))
         return -self.cv_mse_
 
     def predict(self,X):
+        ''' Get predictions from trained model
+
+        Parameters
+        -----------
+        X : pandas DatFrame for input data into predictive model
+
+        Returns
+        --------
+        pred: pandas Series of predictions
+        '''
+
         return self.estimator.predict(X)
 
     def test_mse(self,X,y):
+        ''' Calculate test mean squared error (model score)
+
+        Parameters
+        -----------
+        X : pandas DatFrame for input data into predictive model
+        y : pandas DatFrame for actual target value
+
+        Returns
+        --------
+        self.test_mse_: Mean squared error of predictions based on actuals
+        '''
         y_pred = self.predict(X)
         self.test_mse_ = mean_squared_error(y_pred, y)
         return self.test_mse_
