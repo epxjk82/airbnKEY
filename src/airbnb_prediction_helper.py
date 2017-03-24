@@ -10,11 +10,24 @@ import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
 def plot_prediction_on_data(x, y_pred, y_true):
+    """Plot predictions on top of actuals"""
+
     plt.plot(x,y_pred, color='red')
     plt.scatter(x,y_true, color='blue', alpha=0.3)
     plt.show()
 
 def get_linreg_summary_sm(model):
+    """Prints linear regression summary and plots from statsmodels
+
+    Parameters
+    ----------
+    model: fitted statsmodel
+        A pre-fitted model
+
+    Returns
+    -------
+    None
+    """
 
     print (model.summary())
 
@@ -24,13 +37,6 @@ def get_linreg_summary_sm(model):
     ax.set_xlabel('Fitted Values')
     ax.set_ylabel('Studentized residuals')
     plt.show()
-
-def get_cv_score(model, X_train, y_train, cv=5, scoring='neg_mean_squared_error'):
-    return np.mean(cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring))
-
-def get_model_pred(model_estimator, X_train, X_test, y_train):
-    model_estimator.fit(X_train, y_train)
-    return model_estimator.predict(X_test), model_estimator
 
 def get_model_confidence_interval(fitted_model, X_train, y_train, conf_interval=0.95):
     """Fits GradientBoostingRegressor models for upper and lower bounds of confidence interval
@@ -84,23 +90,24 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearc
 
     if gridsearch:
         print "Running grid search ..."
-        grid_params = {'learning_rate': [ 0.001, 0.01],
+        grid_params = {'learning_rate': [ 0.001, 0.01, 0.1],
                    'max_features': ['sqrt', 'log2', None],
                    'min_samples_leaf': [1,2,4],
                    'max_depth':[1,2,5],
-                   'n_estimators': [500, 1000, 4000],
-                   'subsample': [0.2, 0.5, 1.0]
+                   'n_estimators': [500, 1000, 4000, 8000],
+                   'subsample': [0.2, 0.5, 0.8]
                   }
 
-        gdbr_gridsearch = GridSearchCV(GradientBoostingRegressor(),
+        gdbr_gridsearch = GridSearchCV(estimator,
                                        grid_params, n_jobs=-1, verbose=True)
 
     mse_scores = []
     for i in range(num_bootstrap):
-        if i%100==0:
+        if i%10==0:
             print "Running iteration {} ...".format(i)
             if i!=0:
                 print "Mean of mse_scores = ", sum(mse_scores)/len(mse_scores)
+
         # Getting bootstrap indices for train
         boot_sample_range = np.array(range(0, len(X.index)))
         boot_sample_idx = np.random.choice(boot_sample_range, len(X.index), replace=True)
@@ -123,10 +130,30 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearc
         mse_scores.append(mean_squared_error(y_test, estimator.predict(X_test)))
 
     mse_scores_mean = sum(mse_scores)/len(mse_scores)
-    #plt.hist(mse_scores, bins=30, alpha=0.5);
-    #plt.axvline(mse_scores_mean)
+
     print "Mean MSE:",mse_scores_mean
     return mse_scores
+
+def plot_mse_distribution(mse_score_lists, color_list):
+    """Fits GradientBoostingRegressor models for upper and lower bounds of confidence interval
+
+    Parameters
+    ----------
+    mse_score_list : List of lists (mse scores from get_bootstrap_mse_score_dist())
+    color_list : list of str (colors)
+
+    Returns
+    -------
+    None
+    """
+    fig, ax = plt.subplots()
+    for i, mse_score_list in enumerate(mse_score_lists):
+        ax.hist(mse_score_list, bins=30, alpha=0.3, color=color_list[i]);
+        ax.axvline(sum(mse_score_list)/len(mse_score_list), color=color_list[i])
+        print "{} MSE: {}".format(i, sum(mse_score_list)/len(mse_score_list))
+
+    ax.yaxis.grid(True, linestyle='dotted', linewidth='0.5', color='gray')
+    ax.set_facecolor("white")
 
 def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_list, index='Property_ID', conf_interval=0.90, loft_sample=False):
     """Fits GradientBoostingRegressor models for specified features and returns predictions
@@ -205,6 +232,17 @@ def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_lis
     return fitted_model, full_pred_df, y_pred, X_train, X_test, y_train, y_test
 
 def plot_feature_importances(fitted_model, X_train):
+    """Plots feature importance bar chart for fitted tree model
+
+    Parameters
+    ----------
+    fitted_model: pre-fitted sklearn-type class
+    X_train: pandas DataFrame
+
+    Returns
+    -------
+    None
+    """
     features_names = X_train.columns
     feature_importances = 100*fitted_model.feature_importances_ / np.sum(fitted_model.feature_importances_)
     feature_importances, feature_names, feature_idxs = zip(*sorted(zip(feature_importances, features_names, range(len(features_names)))))
@@ -222,7 +260,28 @@ def plot_feature_importances(fitted_model, X_train):
     plt.show()
     #plt.savefig('plots/feature-importances.png', bbox_inches='tight')
 
-def plot_partial_dependency_plots(fitted_model, X_train, n_col=3, n_row=3, xlabel_height=20, figsize=(12.0, 12.0)):
+def plot_partial_dependency_plots(fitted_model, X_train, n_row=3, n_col=3, xlabel_height=10, figsize=(12.0, 12.0)):
+    """Plots n_row x n_col matrix of partial dependency plots for fitted tree model
+    in descending order based on feature importance
+
+    Parameters
+    ----------
+    fitted_model: pre-fitted sklearn-type class
+    X_train: pandas DataFrame
+    n_row: int
+        Number of rows (optional, default = 3)
+    n_col: int
+        Number of columns (optional, default = 3)
+    xlabel_height: int
+        Position of label for feature importance value on plot (optional, default = 10)
+    figsize: tuple
+        Matplotlib figsize
+
+    Returns
+    -------
+    None
+    """
+
     N_COLS = n_col
     N_ROWS = n_row
     features_names = X_train.columns
@@ -327,6 +386,8 @@ def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=5,N_ESTIMATORS = 2
 
 
 def get_loftium_train_test_split(df):
+    '''Conduct train-test split using loftium sample split'''
+
     insample_prop_ids = []
     with open('data/Loftium/insample_prop_ids.txt') as infile:
         for line in infile:
@@ -340,15 +401,41 @@ def get_loftium_train_test_split(df):
     return train_index, test_index
 
 def get_dummy_dfs(df, dummy_list):
-    '''Convert dummy list to dummy dfs and append to df'''
+    """Convert list of column names to dummy column dfs
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+    dummy_list : dummy_list
+        List of column names for columns to be converted to dummy columns
+
+    Returns
+    -------
+    dummy_dfs : list
+        List of pandas DataFrames with dummy-coded columns
+    """
+
     dummy_dfs=[]
     for dummy in dummy_list:
         dummy_dfs.append(pd.get_dummies(df[dummy]))
     return dummy_dfs
 
-def prep_model_df(df, features, dummys):
+def prep_model_df(df, features, dummy_dfs):
+    """Convert list of column names to dummy column dfs
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+    dummy_dfs : list
+        List of pandas DataFrames with dummy-coded columns (from get_dummy_dfs())
+
+    Returns
+    -------
+    model_df : pandas DataFrame
+        DataFrame with appended dummy columns
+    """
 
     model_df = df[features]
-    for dummy in dummys:
-        model_df = pd.concat([model_df,dummy],axis=1)
+    for dummy_df in dummy_dfs:
+        model_df = pd.concat([model_df,dummy_df],axis=1)
     return model_df
