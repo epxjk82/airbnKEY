@@ -103,11 +103,10 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearc
 
     mse_scores = []
     for i in range(num_bootstrap):
-        if i%10==0:
+        if i%25==0:
             print "Running iteration {} ...".format(i)
             if i!=0:
                 print "Mean of mse_scores = ", sum(mse_scores)/len(mse_scores)
-
         # Getting bootstrap indices for train
         boot_sample_range = np.array(range(0, len(X.index)))
         boot_sample_idx = np.random.choice(boot_sample_range, len(X.index), replace=True)
@@ -209,12 +208,13 @@ def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_lis
     print (X_train.shape, X_test.shape)
     print ("========")
     print ("Running cross validation...")
-    cv_mse = -get_cv_score(model_estimator, X_train, y_train, cv=5, scoring='neg_mean_squared_error')
-    cv_r2 = get_cv_score(model_estimator, X_train, y_train, cv=5, scoring='r2')
+    cv_mse = -np.mean(cross_val_score(model_estimator, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
+    cv_r2 = np.mean(cross_val_score(model_estimator, X_train, y_train, cv=5, scoring='r2'))
     print ("CV MSE: {}, CV R2: {}".format(cv_mse, cv_r2))
     print ("========")
     print ("Training model...")
-    y_pred, fitted_model = get_model_pred(model_estimator, X_train, X_test,y_train)
+    fitted_model = model_estimator.fit(X_train, y_train)
+    y_pred = model_estimator.predict(X_test)
 
     # Get confidence intervals for predictions
     fitted_model_CI_upper, fitted_model_CI_lower = get_model_confidence_interval(fitted_model, X_train, y_train, conf_interval)
@@ -331,7 +331,8 @@ def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=5,N_ESTIMATORS = 2
 
     Returns
     -------
-    None
+    optimal_n_trees: int
+        Optimal number of trees to use in estimator based on training data
     """
 
     train_scores = np.zeros((N_FOLDS, N_ESTIMATORS))
@@ -383,7 +384,7 @@ def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=5,N_ESTIMATORS = 2
 
     plt.legend(loc="upper right")
     print "Optimal point: {} trees, MSE {}".format(optimal_point[0], optimal_point[1])
-
+    return optimal_point[0]
 
 def get_loftium_train_test_split(df):
     '''Conduct train-test split using loftium sample split'''
