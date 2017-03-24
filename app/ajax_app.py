@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_file
-import pickle
+import cPickle as pickle
 import numpy as np
 import pandas as pd
 from matplotlib.pyplot import savefig
@@ -10,7 +10,7 @@ import datetime
 app = Flask(__name__)
 
 
-with open('static/gdbr1_monthly_model.pkl') as f:
+with open('static/gdbr_model.pkl') as f:
     model = pickle.load(f)
 
 
