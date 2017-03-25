@@ -10,7 +10,7 @@ import datetime
 app = Flask(__name__)
 
 
-with open('static/gdbr_model.pkl') as f:
+with open('static/gdbr2_monthly_gridsearch_monthly_model.pkl') as f:
     model = pickle.load(f)
 
 
