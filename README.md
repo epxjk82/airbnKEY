@@ -1,5 +1,12 @@
 # airbnKEY
 
+
+## Note on Confidentiality
+This project was conducted in collaboration with Loftium (http://www.loftium.com/).  Due to the confidentiality of some of the data and modeling methodology, only a subset of information is provided on this repository.
+
+If you are a recruiter who requires full access to the project or product demo for evaluation purposes, please send me an inquiry at john.mk.kim@gmail.com. 
+
+
 ## Project Description
 Home affordability continues to be a major challenge in many metropolitan areas.  With housing prices continuing to outpace wage growth, it has become increasingly difficult for prospective home buyers to fulfill the American dream.
 
@@ -10,12 +17,6 @@ This project aims to estimate the dollar benefit a homeowner can expect from a g
 ### Product Screenshot
 
 ![GitHub Logo](airbnKEY_screenshot.png)
-
-
-## Note on Confidentiality
-This project was conducted in collaboration with Loftium (http://www.loftium.com/).  Due to the confidentiality of some of the data and modeling methodology, only a subset of information is provided on this repository.
-
-If you are a recruiter who requires full access to the project or product demo for evaluation purposes, please send me an inquiry at john.mk.kim@gmail.com. 
 
 
 ## CRISP-DM Workflow
