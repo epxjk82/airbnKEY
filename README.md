@@ -7,6 +7,10 @@ Fortunately, homeowners now have the option to Airbnb spare rooms in their new h
 
 This project aims to estimate the dollar benefit a homeowner can expect from a given home.
 
+Currently, the scope of this project is limited to the Seattle area.
+
+![GitHub Logo](airbnKEY_screenshot.png)
+
 ## CRISP-DM Workflow
 
 ### Data Understanding
