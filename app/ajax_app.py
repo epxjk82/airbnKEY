@@ -47,7 +47,7 @@ def predict():
     days_since_created = 0.0  # Setting to 0.0
     instantbook_enabled = 0.0 # Assuming no instabook to start
     superhost = 0.0  # Assuming no superhost to start
-    overall_rating = 4.7  # user_data['rating']
+    overall_rating = 4.7  # Initializing to average
     number_of_reviews = 0 # user_data['reviews']
     private_bath = 0.0  # Initializing to mean value, will be user defined
     view = 0.0   # Initializing to mean value, will be user defined
@@ -128,7 +128,6 @@ def predict():
     print "view_user = ", view_user
     print "bath_user = ", bath_user
     print "instabook_user = ", instabook_user
-    #prop_type_user = user_data['prop_type']
 
     if view_user:
         view=1.0
@@ -137,27 +136,28 @@ def predict():
     if instabook_user:
         instantbook_enabled=1.0
 
-    # input_data_base = np.array((latitude, longitude ,0,0,0,0,0,0,0,0,0,0,0,0)).reshape(1,-1)
-    #input_data_base = np.array((latitude, longitude ,0,0,0,0,0,0,0,0,0,0,0,0,apt,bnb,cnd,hse,lft,oth,twn)).reshape(1,-1)
-
-    input_data_base = np.array((days_since_created, instantbook_enabled,
-                                latitude, longitude,
-                                superhost, overall_rating, number_of_reviews,
-                                private_bath, view,
+    input_data_base = np.array((days_since_created,
+                                instantbook_enabled,
+                                latitude,
+                                longitude,
+                                superhost,
+                                overall_rating,
+                                number_of_reviews,
+                                private_bath,
+                                view,
                                 0,0,0,0,0,0,0,0,0,0,0,0,
                                 apt,bnb,cnd,hse,lft,oth,twn)).reshape(1,-1)
 
     for i in input_data_base:
         print i,","
+
     # Adding month flag for each iteration
     print "Assigning months..."
-    #print input_data_base
     input_data_list=[]
     print input_data_base.shape
     for i in range(12):
         month_input_data = np.copy(input_data_base)
-        month_input_data[:,i+9]=1
-        # month_input_data[:,i+2]=1
+        month_input_data[:,i+9]=1  # Months begin at index 9
         input_data_list.append(month_input_data)
 
     pred_list_int=[]
@@ -169,11 +169,8 @@ def predict():
 
     month_list = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-    # Save figure
-    # img_filepath = hlp.save_bar_chart_figure(pred_list_int,x_labels)
-
-    # Save results to csv
     pred_df = pd.DataFrame(zip(month_list, pred_list_int), columns=['month', 'prediction']).set_index('month')
+    # Save results to csv
     # pred_df.to_csv('static/pred.csv')
     # pred_df.to_json('static/pred_new.json')
 
