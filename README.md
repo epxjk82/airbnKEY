@@ -1,5 +1,7 @@
 # airbnKEY
 
+![Demo](product_demo.gif)
+
 
 ## Note on Confidentiality
 This project was conducted in collaboration with Loftium (http://www.loftium.com/).  Due to the confidentiality of some of the data and modeling methodology, only a subset of information is provided on this repository.
@@ -13,10 +15,6 @@ Home affordability continues to be a major challenge in many metropolitan areas.
 Fortunately, homeowners now have the option to Airbnb spare rooms in their new homes to help pay for the mortgage.  
 
 This project aims to estimate the dollar benefit a homeowner can expect from a given home.
-
-### Product Screenshot
-
-![Demo](product_demo.gif)
 
 
 ## CRISP-DM Workflow
