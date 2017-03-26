@@ -16,43 +16,54 @@ Fortunately, homeowners now have the option to Airbnb spare rooms in their new h
 
 This project aims to estimate the dollar benefit a homeowner can expect from a given home.
 
+## Repository Structure
+
+- app : content for flask web app
+- src : python source files
+- walkthroughs : jupyter notebook walkthroughs for regression modeling and natural language processing
+
 
 ## CRISP-DM Workflow
 
 ### Data Understanding
 #### Data Sources:
-- Housing sales data
-- City census data
-- Geographic data
+- Partner data
 - Airbnb listing data
 
 #### Obtaining the data:
 - Web-scraping
-- Available APIs (Zillow, airbnb)
+- Available APIs
+
+### Data Exploration
+- Statistics on dataset
+- Visualizations 
 
 ### Data Preparation
 - Cleaning data for null values
 - Managing outliers
-- Creating visualizations for insights
 - Feature engineering
-- Building ABT tables
+- Joining datasets
 
 ### Modeling
 This project will employ an ensemble approach using the following models:
 
-#### Regression models
-Use supervised learning to predict the the Airbnb income for a spare room for a given home.
+#### Gradient Boosting Regression
+Use gradient boosting to predict the the Airbnb income for a spare room for a given home.
 
 #### NLP
-Use unsupervised learning to extract features and/or topics from unstructured data on airbnb listing pages
+Use unsupervised natural language processing methods to extract features and/or topics from unstructured data on airbnb listing pages.
 
 ## Evaluation
-To determine the optimal regression model, this project will employ:
+To determine the optimal regression model, this project used Mean Squared Error as the key evaluation metric.
+
+Methods used:
 - Cross-validation
-- Score comparisons (MSE)
+- Bootstrapping
 - Grid-search
 
 ## Deployment
-Publish a website with:
-- Visual interface with project description
-- Ability to lookup Airbnb revenue potential for a given address
+The final product is a basic web app using flack. 
+
+The app allows a user to look up expected daily income from a room based on various features. 
+
+See `product_demo.gif` for a demo of the web app. 
