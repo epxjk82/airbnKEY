@@ -16,7 +16,7 @@ This project aims to estimate the dollar benefit a homeowner can expect from a g
 
 ### Product Screenshot
 
-![GitHub Logo](airbnKEY_screenshot.png)
+![Demo](product_demo.gif)
 
 
 ## CRISP-DM Workflow
