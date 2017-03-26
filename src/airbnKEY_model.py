@@ -86,7 +86,7 @@ class AirbnKEY_Model(object):
         Parameters
         -----------
         X : pandas DatFrame for input data into predictive model
-        y : pandas DatFrame for actual target value
+        y : pandas DatFrame for target value
 
         Returns
         --------
@@ -97,6 +97,18 @@ class AirbnKEY_Model(object):
         return self.test_mse_
 
     def predict_conf_interval(self, X_test, y_test):
+        ''' Get predictions for specified quantiles
+
+        Parameters
+        -----------
+        X : pandas DatFrame for input data into predictive model
+        y : pandas DatFrame for target value
+
+        Returns
+        --------
+        y_pred_lower, y_pred_upper : pandas Series
+            Predicted values at specified quantiles
+        '''
         alpha = (1. - self.conf_interval)/2
 
         estimator_lower = clone(self.estimator)
