@@ -7,7 +7,10 @@ Fortunately, homeowners now have the option to Airbnb spare rooms in their new h
 
 This project aims to estimate the dollar benefit a homeowner can expect from a given home.
 
-Currently, the scope of this project is limited to the Seattle area.
+## Note on Confidentiality
+This project was conducted in collaboration with Loftium (http://www.loftium.com/).  Due to the confidentiality of some of the data and modeling methodology, only a subset of information is provided on this repository.
+
+If you are a recruiter who requires full access to the project for evaluation purposes, please send me an inquiry at john.mk.kim@gmail.com. 
 
 ![GitHub Logo](airbnKEY_screenshot.png)
 
