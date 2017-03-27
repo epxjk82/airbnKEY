@@ -62,7 +62,7 @@ Methods used:
 - Grid-search
 
 ## Deployment
-The final product is a basic web app using flack. 
+The final product is a basic web app using flask. 
 
 The app allows a user to look up expected daily income from a room based on various features. 
 
