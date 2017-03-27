@@ -47,7 +47,7 @@ def get_model_confidence_interval(fitted_model, X_train, y_train, conf_interval=
 
     return model_CI_upper, model_CI_lower
 
-def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, criterion='friedman_mse', gridsearch=False):
+def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearch=False):
     """Determines and plots the distribution of model performance (mse) using bootstrapping
 
     Parameters
@@ -81,13 +81,12 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, criterion
         gdbr_gridsearch = GridSearchCV(estimator,
                                        grid_params, n_jobs=-1, verbose=True)
 
-    mse_scores = []
-    mae_scores = []
+    scores = []
     for i in range(num_bootstrap):
         if i%100==0:
             print "Running iteration {} ...".format(i)
             if i!=0:
-                print "Mean of mse_scores = ", sum(mse_scores)/len(mse_scores)
+                print "Mean score = ", sum(scores)/len(scores)
         # Getting bootstrap indices for train
         boot_sample_range = np.array(range(0, len(X.index)))
         boot_sample_idx = np.random.choice(boot_sample_range, len(X.index), replace=True)
@@ -109,16 +108,14 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, criterion
 
         estimator.fit(X_train, y_train)
 
-        if criterion=='mae':
-            mse_scores.append(mean_squared_error(y_test, estimator.predict(X_test)))
-            mse_scores_mean = sum(mse_scores)/len(mse_scores)
-            print "Mean MSE:", mse_scores_mean
-            return mse_scores
+        if estimator.criterion=='friedman_mse':
+            scores.append(mean_squared_error(y_test, estimator.predict(X_test)))
+            print "Mean MAE:", sum(scores)/len(scores)
         else:
-            mae_scores.append(mean_absolute_error(y_test, estimator.predict(X_test)))
-            mae_scores_mean = sum(mae_scores)/len(mae_scores)
-            print "Mean MAE:", mae_scores_mean
-            return mae_scores
+            scores.append(mean_absolute_error(y_test, estimator.predict(X_test)))
+            print "Mean MSE:", sum(scores)/len(scores
+
+    return scores
 
 
 def plot_mse_distribution(mse_score_lists, color_list, figsize=(10,6)):
@@ -369,7 +366,7 @@ def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=5,N_ESTIMATORS = 2
                 )
     plt.title("Cross Validation Training and Testing Scores ({}) folds)".format(N_FOLDS))
     plt.xlabel('Number of Boosting Stages', fontsize=14)
-    plt.ylabel('Average Squared Error', fontsize=14)
+    plt.ylabel('Average {} Error'.format(model.criterion), fontsize=14)
     #plt.yaxis.grid(True, linestyle='dotted', linewidth='0.5', color='gray')
 
     plt.legend(loc="upper right")
