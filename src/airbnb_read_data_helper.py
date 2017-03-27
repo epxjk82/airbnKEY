@@ -38,20 +38,43 @@ def import_txtfile_as_df(filepath):
                         cur_prop_id = val
                         d2=defaultdict()
                     else:
-                        #print key, val
                         d2[key] = val
+
                 # If line does not contain ":", then there is an unwanted line break
                 # Append this new line to previous key's value
                 else:
-                    print "Line break error on line ", i
                     d2[key] = d2[key] + ' ' + line
 
     df = pd.DataFrame.from_dict(d, orient='index', dtype=None)
-    df=df.reset_index()
+    df = df.reset_index()
+
+    # adding columns for url and datestamp
     df['url'] = df['index'].apply(lambda x: 'https://www.airbnb.com/rooms/{}'.format(x))
     df['datestamp'] = datestamp
     df.rename(columns={"index": "prop_id"}, inplace=True)
+    
     return df
+
+def import_json_as_df(filepath):
+    """Convert data in jason files to pandas dataframe object
+
+    INPUT:
+        filepath: str (path to txt file with data)
+        Note: Json files are from scrape_data_from_urls function from airbnb_scraping_helper.py
+    RETURNS:
+        pandas df
+    """
+    with open(filepath) as json_text:
+        json_str = json_text.read()
+
+    # converting to a list
+    json_str = json_str.replace('\n','')
+    json_str = json_str.replace('}}{','}},{')
+    json_str = '[' + json_str + ']'
+
+    json_ = json.loads(json_str)
+    df = pd.read_json(json_str)
+    return df, json_
 
 def convert_json_amenities_to_df(json_data):
 
