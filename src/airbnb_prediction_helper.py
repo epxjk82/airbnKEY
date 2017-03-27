@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, KFold
-from sklearn.metrics import mean_squared_error, r2_score, roc_curve
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, roc_curve
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
 from sklearn.ensemble.partial_dependence import plot_partial_dependence, partial_dependence
@@ -47,7 +47,7 @@ def get_model_confidence_interval(fitted_model, X_train, y_train, conf_interval=
 
     return model_CI_upper, model_CI_lower
 
-def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearch=False):
+def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, criterion='friedman_mse', gridsearch=False):
     """Determines and plots the distribution of model performance (mse) using bootstrapping
 
     Parameters
@@ -66,6 +66,8 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearc
     mse_scores : list of mse scores
     """
 
+    estimator.set_params(criterion=criterion)
+
     if gridsearch:
         print "Running grid search ..."
         grid_params = {'learning_rate': [ 0.001, 0.01, 0.1],
@@ -80,6 +82,7 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearc
                                        grid_params, n_jobs=-1, verbose=True)
 
     mse_scores = []
+    mae_scores = []
     for i in range(num_bootstrap):
         if i%100==0:
             print "Running iteration {} ...".format(i)
@@ -103,13 +106,20 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearc
             estimator = gdbr_gridsearch.best_estimator_
 
         #print "Fitting model ..."
+
         estimator.fit(X_train, y_train)
-        mse_scores.append(mean_squared_error(y_test, estimator.predict(X_test)))
 
-    mse_scores_mean = sum(mse_scores)/len(mse_scores)
+        if criterion=='mae':
+            mse_scores.append(mean_squared_error(y_test, estimator.predict(X_test)))
+            mse_scores_mean = sum(mse_scores)/len(mse_scores)
+            print "Mean MSE:", mse_scores_mean
+            return mse_scores
+        else:
+            mae_scores.append(mean_absolute_error(y_test, estimator.predict(X_test)))
+            mae_scores_mean = sum(mae_scores)/len(mae_scores)
+            print "Mean MAE:", mae_scores_mean
+            return mae_scores
 
-    print "Mean MSE:",mse_scores_mean
-    return mse_scores
 
 def plot_mse_distribution(mse_score_lists, color_list, figsize=(10,6)):
     """Fits GradientBoostingRegressor models for upper and lower bounds of confidence interval
