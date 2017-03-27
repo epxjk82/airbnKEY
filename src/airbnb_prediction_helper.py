@@ -16,28 +16,6 @@ def plot_prediction_on_data(x, y_pred, y_true):
     plt.scatter(x,y_true, color='blue', alpha=0.3)
     plt.show()
 
-def get_linreg_summary_sm(model):
-    """Prints linear regression summary and plots from statsmodels
-
-    Parameters
-    ----------
-    model: fitted statsmodel
-        A pre-fitted model
-
-    Returns
-    -------
-    None
-    """
-
-    print (model.summary())
-
-    fig, ax = plt.subplots(1,1,figsize=(6,4))
-    ax.scatter(model.fittedvalues, model.outlier_test()['student_resid'],
-                alpha=0.3)
-    ax.set_xlabel('Fitted Values')
-    ax.set_ylabel('Studentized residuals')
-    plt.show()
-
 def get_model_confidence_interval(fitted_model, X_train, y_train, conf_interval=0.95):
     """Fits GradientBoostingRegressor models for upper and lower bounds of confidence interval
 
@@ -103,7 +81,7 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearc
 
     mse_scores = []
     for i in range(num_bootstrap):
-        if i%25==0:
+        if i%100==0:
             print "Running iteration {} ...".format(i)
             if i!=0:
                 print "Mean of mse_scores = ", sum(mse_scores)/len(mse_scores)
@@ -133,7 +111,7 @@ def get_bootstrap_mse_score_dist(estimator, X, y, num_bootstrap = 100, gridsearc
     print "Mean MSE:",mse_scores_mean
     return mse_scores
 
-def plot_mse_distribution(mse_score_lists, color_list):
+def plot_mse_distribution(mse_score_lists, color_list, figsize=(10,6)):
     """Fits GradientBoostingRegressor models for upper and lower bounds of confidence interval
 
     Parameters
@@ -145,13 +123,15 @@ def plot_mse_distribution(mse_score_lists, color_list):
     -------
     None
     """
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(1, figsize=figsize)
     for i, mse_score_list in enumerate(mse_score_lists):
         ax.hist(mse_score_list, bins=30, alpha=0.3, color=color_list[i]);
         ax.axvline(sum(mse_score_list)/len(mse_score_list), color=color_list[i])
         print "{} MSE: {}".format(i, sum(mse_score_list)/len(mse_score_list))
 
     ax.yaxis.grid(True, linestyle='dotted', linewidth='0.5', color='gray')
+    ax.set_ylabel('Count')
+    ax.set_xlabel('Average MSE')
     ax.set_facecolor("white")
 
 def get_model_predictions_df(model_estimator, df, label, feature_list, dummy_list, index='Property_ID', conf_interval=0.90, loft_sample=False):
@@ -384,7 +364,7 @@ def plot_cross_validation_train_and_test(model, X, y, N_FOLDS=5,N_ESTIMATORS = 2
 
     plt.legend(loc="upper right")
     print "Optimal point: {} trees, MSE {}".format(optimal_point[0], optimal_point[1])
-    return optimal_point[0]
+    return optimal_point[0], model_cv.learning_rate
 
 def get_loftium_train_test_split(df):
     '''Conduct train-test split using loftium sample split'''
@@ -440,3 +420,25 @@ def prep_model_df(df, features, dummy_dfs):
     for dummy_df in dummy_dfs:
         model_df = pd.concat([model_df,dummy_df],axis=1)
     return model_df
+
+def get_linreg_summary_sm(model):
+    """Prints linear regression summary and plots from statsmodels
+
+    Parameters
+    ----------
+    model: fitted statsmodel
+        A pre-fitted model
+
+    Returns
+    -------
+    None
+    """
+
+    print (model.summary())
+
+    fig, ax = plt.subplots(1,1,figsize=(6,4))
+    ax.scatter(model.fittedvalues, model.outlier_test()['student_resid'],
+                alpha=0.3)
+    ax.set_xlabel('Fitted Values')
+    ax.set_ylabel('Studentized residuals')
+    plt.show()
