@@ -13,20 +13,11 @@ app = Flask(__name__)
 with open('static/gdbr2_monthly_gridsearch_monthly_model.pkl') as f:
     model = pickle.load(f)
 
-
 @app.route('/', methods=['GET'])
 def index():
     """Render a splash page containing input fields where the user can input
     lat-long coordinates"""
     return render_template('main/index.html')
-
-@app.route("/build-chart", methods=['POST', 'GET'])
-def build_chart():
-    id = request.form['id']
-    table = clean_dataframe(vertica_query(id))
-    chart_json = parse_to_json(table)
-
-    return render_template('render.html', data=table, chart_json=chart_json)
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -148,9 +139,6 @@ def predict():
                                 0,0,0,0,0,0,0,0,0,0,0,0,
                                 apt,bnb,cnd,hse,lft,oth,twn)).reshape(1,-1)
 
-    for i in input_data_base:
-        print i,","
-
     # Adding month flag for each iteration
     print "Assigning months..."
     input_data_list=[]
@@ -170,9 +158,6 @@ def predict():
     month_list = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
     pred_df = pd.DataFrame(zip(month_list, pred_list_int), columns=['month', 'prediction']).set_index('month')
-    # Save results to csv
-    # pred_df.to_csv('static/pred.csv')
-    # pred_df.to_json('static/pred_new.json')
 
     json_list = []
     for month, pred in zip(month_list, pred_list_int):
@@ -181,7 +166,9 @@ def predict():
         d['prediction'] = pred
         json_list.append(d)
 
+    print "Predictions:"
     print pred_list_int
+
     return jsonify(json_list)
 
 if __name__ == '__main__':
