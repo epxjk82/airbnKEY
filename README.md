@@ -1,6 +1,6 @@
 # airbnKEY
 
-![Demo](product_demo.gif)
+![Demo](product_demo2.gif)
 
 
 ## Note on Confidentiality
@@ -66,4 +66,4 @@ The final product is a basic web app using flask.
 
 The app allows a user to look up expected daily income from a room based on various features. 
 
-See `product_demo.gif` for a demo of the web app. 
+See `product_demo2.gif` for a demo of the web app. 
