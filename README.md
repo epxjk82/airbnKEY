@@ -1,5 +1,4 @@
 # airbnKEY
----
 ![Demo](product_demo2.gif)
 
 
@@ -10,7 +9,6 @@ If you are a recruiter who requires full access to the project or product demo f
 
 
 ## Project Description
----
 Home affordability continues to be a major challenge in many metropolitan areas.  With housing prices continuing to outpace wage growth, it has become increasingly difficult for prospective home buyers to fulfill the American dream.
 
 Fortunately, homeowners now have the option to Airbnb spare rooms in their new homes to help pay for the mortgage.  
@@ -18,14 +16,12 @@ Fortunately, homeowners now have the option to Airbnb spare rooms in their new h
 This project aims to estimate the dollar benefit a homeowner can expect from a room in a home.
 
 ## Repository Structure
----
 - app : Source files for flask web app deployment
 - src : Python source files for data exploration and modeling
 - walkthroughs : Jupyter notebook walkthroughs for regression modeling and natural language processing
 
 
 ## CRISP-DM Workflow
----
 ### Data Understanding
 **Data Sources:**
 - Partner data
